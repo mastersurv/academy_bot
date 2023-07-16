@@ -1,1 +1,7 @@
 .idea
+Bot_with_SQL
+Lib
+Scripts
+pycache
+config.py
+pyvenv.cfg

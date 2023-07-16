@@ -1,14 +1,14 @@
 from aiogram import executor, types
 import logging
 from create_bot import dp, bot  # , db
-# from handlers import start_handlers
+from handlers import register_start_handlers
 
 
 logging.basicConfig(level=logging.INFO)
 
 
 # Регистрация хэндлеров start_handlers
-# start_handlers.register_start_handlers(dp)
+register_start_handlers(dp)
 
 
 async def on_startup(dp):
