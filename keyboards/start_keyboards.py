@@ -17,3 +17,13 @@ def get_base_keyboard():
         KeyboardButton("Я знаю, что я хочу")
     )
     return keyboard
+
+
+def first_look_keyboard():
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    keyboard.add(
+        InlineKeyboardButton("Подобрать курс", callback_data="catalog"),
+        InlineKeyboardButton("Помощь в создании", url="https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUIcmlja3JvbGw%3D"),
+        InlineKeyboardButton("Назад", callback_data="back_to_start")
+    )
+    return keyboard

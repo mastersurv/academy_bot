@@ -1,5 +1,6 @@
-from create_bot import dp, types, Dispatcher
-from keyboards import get_base_keyboard
+from aiogram.utils import exceptions
+from create_bot import dp, types, Dispatcher, bot
+from keyboards import get_base_keyboard, first_look_keyboard
 
 
 # @dp.message_handler(commands='start')
@@ -13,14 +14,41 @@ async def start(message: types.Message):
 
 async def set_default_commands(dp, chat_id: int):
     await dp.bot.set_my_commands([
-        # types.BotCommand('ОБУЧЕНИЕ', 'Начать сначала'),
-        # types.BotCommand('ПРОФИЛЬ', 'Справка о боте'),
-        # types.BotCommand('ПОДПИСКА', 'Справка о боте'),
-        # types.BotCommand('ЗАДАТЬ_ВОПРОС', 'Справка о боте'),
-        types.BotCommand('start', 'Справка о боте'),
-        types.BotCommand('help', 'Справка о боте')
+        types.BotCommand('start', 'Запуск'),
+        types.BotCommand('help', 'Справка о боте'),
+        types.BotCommand('education', 'Обучение'),
+        types.BotCommand('profile', 'О себе'),
+        types.BotCommand('subscribe', 'Проверить подписку'),
+        types.BotCommand('ask_question', 'Задать вопрос')
     ], scope=types.BotCommandScopeChat(chat_id), language_code='ru')
+
+
+# @dp.message_handler(text='Я здесь впервые')
+async def first_look(message: types.Message):
+    keyboard_to_delete = types.ReplyKeyboardRemove()
+    try:
+        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+    except exceptions.MessageToDeleteNotFound:
+        # Если кнопка уже удалена, то продолжаем выполнение кода
+
+        pass
+    await message.answer(text="Если есть чем поделиться с людьми, то мы поможем создать  свой собственный курс \n"
+                              "\n"
+                              "Если хочешь приобрести новые навыки, то поможем выбрать курс",
+                         reply_markup=first_look_keyboard())
+
+
+# @dp.callback_query_handler(text='back_to_start')
+async def back_to_start(call: types.CallbackQuery):
+    await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id - 1)
+    await call.message.delete()
+    await call.message.answer(text='Welcome to the club body!\n'
+                                   "https://t.me/xrenator \n"
+                                   "https://chat.openai.com/",
+                              reply_markup=get_base_keyboard())
 
 
 def register_start_handlers(dp: Dispatcher):
     dp.register_message_handler(start, commands='start')
+    dp.register_message_handler(first_look, text='Я здесь впервые')
+    dp.register_callback_query_handler(back_to_start, text='back_to_start')
