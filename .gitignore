@@ -1,7 +1,6 @@
 .idea
-Bot_with_SQL
 Lib
 Scripts
-pycache
+__pycache__
 config.py
 pyvenv.cfg
