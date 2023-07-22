@@ -1,7 +1,7 @@
 from aiogram import executor, types
 import logging
 from create_bot import dp, bot  # , db
-from handlers import register_start_handlers
+from handlers import register_start_handlers, register_create_course_handlers
 
 
 logging.basicConfig(level=logging.INFO)
@@ -9,6 +9,9 @@ logging.basicConfig(level=logging.INFO)
 
 # Регистрация хэндлеров start_handlers
 register_start_handlers(dp)
+
+# Регистрация хэндлеров create_course_handlers
+register_create_course_handlers(dp)
 
 
 async def on_startup(dp):
