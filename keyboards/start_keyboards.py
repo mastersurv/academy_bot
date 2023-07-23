@@ -34,7 +34,7 @@ def i_known_keyboard():
     keyboard = InlineKeyboardMarkup(row_width=2)
     keyboard.add(
         InlineKeyboardButton("Подобрать курс", callback_data="catalog"),
-        InlineKeyboardButton("Создание курса", callback_data="base_menu"),
+        InlineKeyboardButton("Создание курса", callback_data="create_course"),
         InlineKeyboardButton("Назад", callback_data="back_to_start")
     )
     return keyboard
