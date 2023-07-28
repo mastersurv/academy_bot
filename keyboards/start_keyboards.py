@@ -11,7 +11,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeybo
 
 
 def get_base_keyboard():
-    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
     keyboard.add(
         KeyboardButton("Я здесь впервые"),
         KeyboardButton("Я знаю, что я хочу")

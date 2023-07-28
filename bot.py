@@ -16,7 +16,7 @@ register_create_course_handlers(dp)
 
 async def on_startup(dp):
 	await bot.send_message(633496059, 'Бот запущен')
-	await bot.send_message(1087245469, 'Бот запущен')
+	# await bot.send_message(1087245469, 'Бот запущен')
 
 
 if __name__ == "__main__":

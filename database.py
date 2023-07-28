@@ -1,13 +1,23 @@
-import sqlite3
+import psycopg2
 
 class DataBase:
-    def __init__(self, db_name):
+    def __init__(self, db_name, user, password, host, port):
         self.db_name = db_name
+        self.user = user
+        self.password = password
+        self.host = host
+        self.port = port
         self.conn = None
         self.lastrow_id = None
 
     def connect(self):
-        self.conn = sqlite3.connect(self.db_name)
+        self.conn = psycopg2.connect(
+            dbname=self.db_name,
+            user=self.user,
+            password=self.password,
+            host=self.host,
+            port=self.port
+        )
 
     def disconnect(self):
         if self.conn:
@@ -35,8 +45,7 @@ class DataBase:
 
         cursor = self.conn.cursor()
 
-        # TODO создание таблиц CREATE TABLE ...
-
+        # TODO: Создание таблиц (CREATE TABLE ...) для PostgreSQL
 
         self.conn.commit()
         self.disconnect()

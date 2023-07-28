@@ -1,6 +1,11 @@
 from aiogram.utils import exceptions
 from create_bot import dp, types, Dispatcher, bot
 from keyboards import get_base_keyboard, first_look_keyboard, i_known_keyboard
+import asyncio
+
+
+# Создаем асинхронный мьютекс (asyncio.Lock) для синхронизации удаления сообщений
+delete_message_lock = asyncio.Lock()
 
 
 # @dp.message_handler(commands='start')
@@ -23,15 +28,15 @@ async def set_default_commands(dp, chat_id: int):
     ], scope=types.BotCommandScopeChat(chat_id), language_code='ru')
 
 
-# @dp.message_handler(text='Я здесь впервые')
+@dp.message_handler(text='Я здесь впервые')
 async def first_look(message: types.Message):
     keyboard_to_delete = types.ReplyKeyboardRemove()
-    try:
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
-    except exceptions.MessageToDeleteNotFound:
-        # Если кнопка уже удалена, то продолжаем выполнение кода
-
-        pass
+    async with delete_message_lock:
+        try:
+            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+        except exceptions.MessageToDeleteNotFound as e:
+            # Если кнопка уже удалена, то продолжаем выполнение кода
+            print(e)
     await message.answer(text="Если есть чем поделиться с людьми, то мы поможем создать  свой собственный курс \n"
                               "\n"
                               "Если хочешь приобрести новые навыки, то поможем выбрать курс",
@@ -40,8 +45,14 @@ async def first_look(message: types.Message):
 
 # @dp.callback_query_handler(text='back_to_start')
 async def back_to_start(call: types.CallbackQuery):
-    await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id - 1)
-    await call.message.delete()
+    await call.answer()
+    async with delete_message_lock:
+        try:
+            await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id - 1)
+            await call.message.delete()
+        except exceptions.MessageToDeleteNotFound:
+            # Если кнопка уже удалена, то продолжаем выполнение кода
+            pass
     await call.message.answer(text='Welcome to the club body!\n'
                                    "https://t.me/xrenator \n"
                                    "https://chat.openai.com/",
@@ -51,12 +62,12 @@ async def back_to_start(call: types.CallbackQuery):
 # @dp.message_handler(text='Я знаю, что я хочу')
 async def i_known(message: types.Message):
     keyboard_to_delete = types.ReplyKeyboardRemove()
-    try:
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
-    except exceptions.MessageToDeleteNotFound:
-        # Если кнопка уже удалена, то продолжаем выполнение кода
-
-        pass
+    async with delete_message_lock:
+        try:
+            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+        except exceptions.MessageToDeleteNotFound:
+            # Если кнопка уже удалена, то продолжаем выполнение кода
+            pass
     await message.answer(text="Скорее подбирай или создавай свой курс",
                          reply_markup=i_known_keyboard())
 
