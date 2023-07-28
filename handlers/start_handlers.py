@@ -49,6 +49,10 @@ async def back_to_start(call: types.CallbackQuery):
     async with delete_message_lock:
         try:
             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id - 1)
+        except exceptions.MessageToDeleteNotFound:
+            # Если кнопка уже удалена, то продолжаем выполнение кода
+            pass
+        try:
             await call.message.delete()
         except exceptions.MessageToDeleteNotFound:
             # Если кнопка уже удалена, то продолжаем выполнение кода

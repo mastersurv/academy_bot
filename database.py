@@ -1,4 +1,4 @@
-import psycopg2
+import asyncpg
 
 class DataBase:
     def __init__(self, db_name, user, password, host, port):
@@ -7,45 +7,27 @@ class DataBase:
         self.password = password
         self.host = host
         self.port = port
-        self.conn = None
-        self.lastrow_id = None
+        self.pool = None
 
-    def connect(self):
-        self.conn = psycopg2.connect(
-            dbname=self.db_name,
+    async def connect(self):
+        self.pool = await asyncpg.create_pool(
+            database=self.db_name,
             user=self.user,
             password=self.password,
             host=self.host,
             port=self.port
         )
 
-    def disconnect(self):
-        if self.conn:
-            self.conn.close()
+    async def disconnect(self):
+        if self.pool:
+            await self.pool.close()
 
-    def execute_query(self, query, parameters=None):
-        self.connect()
-        cursor = self.conn.cursor()
+    async def execute_query(self, query, *args):
+        async with self.pool.acquire() as connection:
+            result = await connection.fetch(query, *args)
+            return result
 
-        if parameters:
-            cursor.execute(query, parameters)
-        else:
-            cursor.execute(query)
-
-        self.lastrow_id = cursor.lastrowid
-        result = cursor.fetchall()
-
-        self.conn.commit()
-        cursor.close()
-
-        return result
-
-    def create_tables(self):
-        self.connect()
-
-        cursor = self.conn.cursor()
-
-        # TODO: Создание таблиц (CREATE TABLE ...) для PostgreSQL
-
-        self.conn.commit()
-        self.disconnect()
+    async def create_tables(self):
+        async with self.pool.acquire() as connection:
+            # TODO: Создание таблиц (CREATE TABLE ...) для PostgreSQL
+            pass

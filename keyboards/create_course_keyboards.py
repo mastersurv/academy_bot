@@ -8,3 +8,11 @@ def create_course_kb():
 		InlineKeyboardButton("Назад", callback_data="back_to_create")
 	)
 	return keyboard
+
+
+def back_to_start_create():
+	keyboard = InlineKeyboardMarkup()
+	keyboard.add(
+		InlineKeyboardButton("Назад", callback_data="create_course")
+	)
+	return keyboard
