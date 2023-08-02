@@ -28,6 +28,8 @@ class DataBase:
             return result
 
     async def create_tables(self):
+        if self.pool is None:
+            await self.connect()
         async with self.pool.acquire() as connection:
             # TODO: Создание таблиц (CREATE TABLE ...) для PostgreSQL
             pass
