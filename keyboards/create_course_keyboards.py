@@ -16,3 +16,19 @@ def back_to_start_create():
 		InlineKeyboardButton("Назад", callback_data="create_course")
 	)
 	return keyboard
+
+
+def back_to_name_course():
+	keyboard = InlineKeyboardMarkup()
+	keyboard.add(
+		InlineKeyboardButton("Назад", callback_data="back_to_name")
+	)
+	return keyboard
+
+
+def back_to_short_description():
+	keyboard = InlineKeyboardMarkup()
+	keyboard.add(
+		InlineKeyboardButton("Назад", callback_data="back_to_short_description")
+	)
+	return keyboard
