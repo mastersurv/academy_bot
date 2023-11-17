@@ -4,6 +4,10 @@ from utils.db_api.database import Database
 from aiogram.types import Message
 from aiogram.dispatcher.dispatcher import FSMContext
 
+from blanks.bot_texts import start_text
+from blanks.bot_markup import tariffs_markup
+
+
 class MyBot:
     def __init__(self, bot: Bot, dp: Dispatcher, db: Database):
         self.bot = bot
@@ -13,6 +17,12 @@ class MyBot:
     async def start_handler(self, message: Message, state: FSMContext):
         chat = message.chat.id
         tg_id = message.from_user.id
+
+        await self.bot.send_message(
+            chat_id=chat,
+            text=start_text,
+            reply_markup=tariffs_markup
+        )
 
     def register_handlers(self):
         self.dp.register_message_handler(callback=self.start_handler, commands=["start"])
