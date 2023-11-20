@@ -32,3 +32,20 @@ def back_to_short_description():
 		InlineKeyboardButton("Назад", callback_data="back_to_short_description")
 	)
 	return keyboard
+
+
+def back_to_image_description():
+	keyboard = InlineKeyboardMarkup()
+	keyboard.add(
+		InlineKeyboardButton("Назад", callback_data="back_to_image_description")
+	)
+	return keyboard
+
+
+def skip_back_video_step():
+	keyboard = InlineKeyboardMarkup()
+	keyboard.add(
+		InlineKeyboardButton("Пропустить", callback_data="skip_video_step"),
+		InlineKeyboardButton("Назад", callback_data="back_to_short_description")
+	)
+	return keyboard

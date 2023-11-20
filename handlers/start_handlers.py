@@ -54,9 +54,7 @@ async def back_to_start(call: types.CallbackQuery):
 		except exceptions.MessageToDeleteNotFound:
 			# Если кнопка уже удалена, то продолжаем выполнение кода
 			pass
-	await call.message.answer(text='Welcome to the club body!\n'
-	                               "https://t.me/xrenator \n"
-	                               "https://chat.openai.com/",
+	await call.message.answer(text='Добро пожаловать в Академию курсов!\n',
 	                          reply_markup=get_base_keyboard())
 
 

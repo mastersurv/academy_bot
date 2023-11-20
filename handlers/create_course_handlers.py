@@ -1,10 +1,11 @@
 from create_bot import dp, Dispatcher, types, bot
 from keyboards import start_keyboards, create_course_keyboards
 from aiogram.utils import exceptions
-from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher import FSMContext, filters
 from aiogram.dispatcher.filters.state import State, StatesGroup
 import aiohttp, os
 from config import TOKEN
+import shutil
 
 
 # Определяем состояния для машины состояний
@@ -15,6 +16,8 @@ class CreateCourseStates(StatesGroup):
 	Description = State()
 	ModuleTitle = State()
 	ModuleDescription = State()
+	StepVideo = State()
+	StepText = State()
 
 
 # Функция для удаления предыдущего сообщения и восстановления предыдущего состояния
@@ -43,18 +46,6 @@ async def creation_start(call: types.CallbackQuery, state: FSMContext):
     ЛОНГРИДЫ - это....
     КУРСЫ В МОДУЛЬНОМ ФОРМАТЕ, СЕЙЧАС ВЫ ПРИСТУПАЕТЕ К СОЗДАНИЮ ОГЛАВЛЕНИЯ И ПЕРВОГО МОДУЛЯ
     """, reply_markup=create_course_keyboards.create_course_kb())
-
-
-# Обработчик для возврата на предыдущий шаг
-@dp.callback_query_handler(text='back_to_create', state='*')
-async def back_to_create(call: types.CallbackQuery, state: FSMContext):
-	await call.answer()
-	await delete_previous_message(call)
-
-	# await CreateCourseStates.Name.set()
-	await state.reset_state()
-	await call.message.edit_text(text="Скорее подбирай или создавай свой курс",
-	                             reply_markup=start_keyboards.i_known_keyboard())
 
 
 # Обработчик для начала создания курса
@@ -89,22 +80,6 @@ async def enter_name(message: types.Message, state: FSMContext):
 		                     reply_markup=create_course_keyboards.back_to_name_course())
 
 
-# Обработчик для кнопки "Отмена" или "Заново" на этапе ввода названия курса
-@dp.callback_query_handler(text='back_to_name', state=CreateCourseStates.ShortDescription)
-async def back_to_name(call: types.CallbackQuery, state: FSMContext):
-	await call.answer()
-
-	# Восстанавливаем предыдущее состояние
-	await delete_previous_message(call)
-	try:
-		await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id - 2)
-	except exceptions.MessageToDeleteNotFound as e:
-		print(e)
-		pass
-	await call.message.edit_text("Введи новое название курса:",
-	                             reply_markup=create_course_keyboards.back_to_start_create())
-
-
 # Обработчик для ввода краткого описания курса
 @dp.message_handler(state=CreateCourseStates.ShortDescription)
 async def enter_short_description(message: types.Message, state: FSMContext):
@@ -118,22 +93,7 @@ async def enter_short_description(message: types.Message, state: FSMContext):
 	                     reply_markup=create_course_keyboards.back_to_short_description())
 
 
-# Обработчик для кнопки "Отмена" или "Заново" на этапе ввода краткого описания курса
-@dp.callback_query_handler(text='back_to_short_description', state=CreateCourseStates.ShortDescriptionImage)
-async def back_to_name(call: types.CallbackQuery, state: FSMContext):
-	await call.answer()
-
-	# Восстанавливаем предыдущее состояние
-	await delete_previous_message(call)
-	try:
-		await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id - 2)
-	except exceptions.MessageToDeleteNotFound as e:
-		pass
-	await call.message.edit_text("Введи новое краткое описание курса:",
-	                             reply_markup=create_course_keyboards.back_to_name_course())
-
-
-@dp.message_handler(content_types=types.ContentTypes.PHOTO | types.ContentTypes.VIDEO,
+@dp.message_handler(content_types=types.ContentTypes.PHOTO,
                     state=CreateCourseStates.ShortDescriptionImage)
 async def enter_short_description_image(message: types.Message, state: FSMContext):
 	async with state.proxy() as data:
@@ -142,7 +102,7 @@ async def enter_short_description_image(message: types.Message, state: FSMContex
 	# Получите информацию о файле
 	file = message.photo[-1] if message.photo else message.video
 	file_info = await bot.get_file(file.file_id)
-	file_url = f'https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}'  # Замените BOT_TOKEN на ваш токен
+	file_url = f'https://api.telegram.org/file/bot{TOKEN}/{file_info.file_path}'
 
 	# Создайте путь для сохранения изображения
 	save_path = os.path.join('courses', course_name)
@@ -171,7 +131,8 @@ async def enter_short_description_image(message: types.Message, state: FSMContex
 
 				# Переходите к следующему шагу - вводу полного описания курса
 				await CreateCourseStates.Description.set()
-				await message.answer("Теперь введите описание курса:")
+				await message.answer("Теперь введите описание курса:",
+				                     reply_markup=create_course_keyboards.back_to_image_description())
 			else:
 				await message.answer("Не удалось скачать изображение.")
 
@@ -191,7 +152,6 @@ async def enter_description(message: types.Message, state: FSMContext):
 # Обработчик для ввода названия модуля
 @dp.message_handler(state=CreateCourseStates.ModuleTitle)
 async def enter_module_title(message: types.Message, state: FSMContext):
-	# Здесь вы можете сохранить название модуля в базе данных или словаре состояний
 	module_title = message.text
 	await state.update_data(module_title=module_title)
 
@@ -203,22 +163,30 @@ async def enter_module_title(message: types.Message, state: FSMContext):
 # Обработчик для ввода описания модуля
 @dp.message_handler(state=CreateCourseStates.ModuleDescription)
 async def enter_module_description(message: types.Message, state: FSMContext):
-	# Здесь вы можете сохранить описание модуля в базе данных или словаре состояний
 	module_description = message.text
 	await state.update_data(module_description=module_description)
-
 	# Завершаем процесс создания курса и переходим в исходное состояние
-	data = await state.get_data()
-	print(data)
-	# Здесь вы можете сохранить данные в базе данных вместо словаря состояний
-	# data содержит все введенные пользователем данные: name, description, module_title, module_description и другие
-	# Например, можно воспользоваться библиотекой PostgreSQL для сохранения данных в базе данных
-
-	# Очищаем состояние, чтобы пользователь мог начать создание нового курса
-	await state.finish()
-
-	await message.answer("Создание курса завершено. Спасибо за участие!",
+	await CreateCourseStates.StepVideo.set()
+	await message.answer("Отличное описание! Приступим к созданию первого упражнения."
+	                     "Теперь пришли видео с теорией или пропусти этот шаг",
 	                     reply_markup=start_keyboards.i_known_keyboard())
+
+
+# Обработчик для добавления задания в модуль
+@dp.message_handler(state=CreateCourseStates.StepVideo)
+async def enter_module_task(message: types.Message, state: FSMContext):
+	# Проверяем, является ли введенное сообщение видео
+	if message.video:
+		# Если пользователь загрузил видео, можно сохранить его и обработать по необходимости
+		video_id = message.video.file_id
+		# Далее можно обработать это видео (например, сохранить в базе данных) и продолжить создание курса
+		await state.update_data(step_task_video_id=video_id)
+		print(state.get_data())
+		await message.answer("Видео с теорией добавлено! Теперь пришли текст к видео.")
+	else:
+		# Если пользователь решает пропустить этот шаг, переходим к следующему обработчику
+		await message.answer("Шаг пропущен. Теперь пришли текст с теорией для этого шага.")
+	await CreateCourseStates.StepText.set()
 
 
 # --------------------- Добавление в базу данных курсов, модулей и шагов ---------------------
@@ -241,7 +209,6 @@ async def enter_module_description(message: types.Message, state: FSMContext):
 
 def register_create_course_handlers(dp: Dispatcher):
 	dp.register_callback_query_handler(creation_start, text='create_course', state='*')
-	dp.register_callback_query_handler(back_to_create, text='back_to_create', state='*')
 	dp.register_callback_query_handler(start_create, text='start_create', state='*')
 	dp.register_message_handler(enter_name, state=CreateCourseStates.Name)
 	dp.register_message_handler(enter_description, state=CreateCourseStates.Description)
