@@ -1,5 +1,6 @@
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
 
-class BotStates(StatesGroup):
-    pass
+class SettingsStates(StatesGroup):
+    add_bot = State()
+    settings = State()

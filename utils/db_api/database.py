@@ -34,8 +34,15 @@ class DataBase:
         async with self.pool.acquire() as connection:
             # Создание таблиц (CREATE TABLE ...) для PostgreSQL
             await connection.execute('''
+                CREATE TABLE IF NOT EXISTS bots (
+                    bot_token TEXT PRIMARY KEY,
+                    tg_id INT
+                );
+            ''')
+
+            await connection.execute('''
                 CREATE TABLE IF NOT EXISTS courses (
-                    course_id PRIMARY KEY,
+                    course_id INT PRIMARY KEY,
                     course_title VARCHAR(255),
                     course_description TEXT,
                     course_image BLOB,
@@ -45,7 +52,7 @@ class DataBase:
 
             await connection.execute('''
                 CREATE TABLE IF NOT EXISTS modules (
-                    module_id PRIMARY KEY,
+                    module_id INT PRIMARY KEY,
                     course_id INT REFERENCES courses(course_id),
                     module_title VARCHAR(255),
                     module_description TEXT,
@@ -56,7 +63,7 @@ class DataBase:
 
             await connection.execute('''
                 CREATE TABLE IF NOT EXISTS lessons (
-                    lesson_id PRIMARY KEY,
+                    lesson_id INT PRIMARY KEY,
                     module_id INT REFERENCES modules(module_id),
                     course_id INT REFERENCES courses(course_id),
                     lesson_title VARCHAR(255),
@@ -70,6 +77,17 @@ class DataBase:
                 );
             ''')
 
+    async def add_bot(self, bot_token: str, tg_id: int):
+        if self.pool is None:
+            await self.connect()
+
+        async with self.pool.acquire() as connection:
+            await connection.execute("""
+                INSERT OR REPLACE INTO bots
+                (bot_token, tg_id)
+                VALUES
+                (?, ?)
+            """, (bot_token, tg_id))
     async def add_course(
             self, course_id: int, name: str, description: str, description_image: bytes, bot_token: str
     ):

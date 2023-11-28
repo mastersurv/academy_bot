@@ -1,14 +1,14 @@
 from aiogram import Bot, Dispatcher, executor
-from utils.db_api.database import Database
+from utils.db_api.database import DataBase
 
 from aiogram.types import Message
 from aiogram.dispatcher.dispatcher import FSMContext
 
-from handlers.callback_handler import callback_handler
+from handlers.constructor_callback_handler import constructor_callback_handler
 
 
 class MyBot:
-    def __init__(self, bot: Bot, dp: Dispatcher, db: Database):
+    def __init__(self, bot: Bot, dp: Dispatcher, db: DataBase):
         self.bot = bot
         self.dp = dp
         self.db = db
@@ -19,7 +19,7 @@ class MyBot:
 
     def register_handlers(self):
         self.dp.register_message_handler(callback=self.start_handler, commands=["start"], state="*")
-        self.dp.register_callback_query_handler(callback=callback_handler, state="*")
+        self.dp.register_callback_query_handler(callback=constructor_callback_handler, state="*")
 
     def run(self):
         self.register_handlers()
