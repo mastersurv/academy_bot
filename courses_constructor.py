@@ -20,6 +20,7 @@ class MyBot:
     def register_handlers(self):
         self.dp.register_message_handler(callback=self.start_handler, commands=["start"], state="*")
         self.dp.register_callback_query_handler(callback=callback_handler, state="*")
+
     def run(self):
         self.register_handlers()
         executor.start_polling(dispatcher=self.dp, skip_updates=True)

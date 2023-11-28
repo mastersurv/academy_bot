@@ -1,14 +1,14 @@
 from aiogram import Dispatcher, Bot
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
-from bot import MyBot
-from utils.db_api.database import Database
-from config import bot_token, db_name
+from courses_constructor import MyBot
+from utils.db_api.database import DataBase
+from config import TOKEN, db_name, db_user, password_db, db_host, db_port
 
 
-bot = Bot(bot_token)
+bot = Bot(token=TOKEN)
 dp = Dispatcher(bot=bot, storage=MemoryStorage())
-db = Database(db_name)
+db = DataBase(db_name, db_user, password_db, db_host, db_port)
 
 my_bot = MyBot(bot=bot, dp=dp, db=db)
 my_bot.run()
