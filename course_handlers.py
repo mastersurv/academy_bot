@@ -23,7 +23,7 @@ async def start(message: types.Message):
 
 
 # Обработчик для inline-кнопок
-@dp.callback_query_handler(lambda callback_query: True)
+@dp.callback_query_handler(text_startswith='course_')
 async def handle_inline_button(call: types.CallbackQuery):
 	# Обработка нажатия на inline-кнопку
 	await call.answer()
@@ -34,6 +34,10 @@ async def handle_inline_button(call: types.CallbackQuery):
 	description = f"Описание курса {course_id}"
 
 	await call.message.edit_text(text=description)
+
+
+
+
 
 
 def register_course_handlers(dp: Dispatcher):
