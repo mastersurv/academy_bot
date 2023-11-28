@@ -115,3 +115,11 @@ class DataBase:
               (?, ?, ?, ?, ?, ?)
             """, (lesson_id, module_id, course_id, lesson_title, lesson_description,
             audio, photo, video, video_note, document, document_name))
+
+    async def get_courses_ids(self):
+        if self.pool is None:
+            await self.connect()
+        async with self.pool.acquire() as connection:
+            courses_ids = await connection.execute("""
+              SELECT course_id FROM courses
+            """).fetchall()
