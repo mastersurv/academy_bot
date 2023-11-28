@@ -4,8 +4,7 @@ from utils.db_api.database import Database
 from aiogram.types import Message
 from aiogram.dispatcher.dispatcher import FSMContext
 
-from blanks.bot_texts import start_text
-from blanks.bot_markup import tariffs_markup
+from handlers.callback_handler import callback_handler
 
 
 class MyBot:
@@ -18,15 +17,9 @@ class MyBot:
         chat = message.chat.id
         tg_id = message.from_user.id
 
-        await self.bot.send_message(
-            chat_id=chat,
-            text=start_text,
-            reply_markup=tariffs_markup
-        )
-
     def register_handlers(self):
-        self.dp.register_message_handler(callback=self.start_handler, commands=["start"])
-
+        self.dp.register_message_handler(callback=self.start_handler, commands=["start"], state="*")
+        self.dp.register_callback_query_handler(callback=callback_handler, state="*")
     def run(self):
         self.register_handlers()
         executor.start_polling(dispatcher=self.dp, skip_updates=True)
