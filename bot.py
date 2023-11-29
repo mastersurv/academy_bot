@@ -16,6 +16,6 @@ async def on_startup(dp):
 	await db.create_tables()
 
 
+
 if __name__ == "__main__":
-	# Создаем необходимые таблицы
 	executor.start_polling(dp, skip_updates=True, on_startup=on_startup)

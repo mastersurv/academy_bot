@@ -1,20 +1,30 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from getting_data import get_courses, get_course_modules
+from create_bot import bot
 
-async def get_courses() -> list[tuple]:
-    # Код для получения списка курсов из базы данных
-    # Возвращаем список курсов в формате (id, name)
-    courses = [(1, 'Course 1'), (2, 'Course 2'), (3, 'Course 3')]
-    return courses
+token_from_bot = bot._token  # TODO: Получение токена нового бота
 
 
-# Функция для генерации InlineKeyboardMarkup с кнопками для курсов
 async def generate_courses_keyboard() -> InlineKeyboardMarkup:
-    courses = await get_courses()
-    keyboard = InlineKeyboardMarkup(row_width=2)
+	courses = await get_courses(token_from_bot)
+	keyboard = InlineKeyboardMarkup()
 
-    for course_id, course_name in courses:
-        callback_data = f'course_{course_id}'
-        button = InlineKeyboardButton(course_name, callback_data=callback_data)
-        keyboard.add(button)
+	for course_id, course_name in courses:
+		callback_data = f'course_{course_id}'
+		button = InlineKeyboardButton(course_name, callback_data=callback_data)
+		keyboard.add(button)
 
-    return keyboard
+	return keyboard
+
+
+async def generate_modules_keyboard(course_id: int) -> InlineKeyboardMarkup:
+	modules = await get_course_modules(token_from_bot, course_id)
+	keyboard = InlineKeyboardMarkup()
+
+	for module_id, module_name in modules:
+		callback_data = f'module_{module_id}'
+		button = InlineKeyboardButton(module_name, callback_data=callback_data)
+		keyboard.add(button)
+	keyboard.add(InlineKeyboardButton("Назад", callback_data="back_courses"))
+
+	return keyboard
