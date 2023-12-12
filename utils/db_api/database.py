@@ -33,12 +33,14 @@ class DataBase:
             await self.connect()
         async with self.pool.acquire() as connection:
             # Создание таблиц (CREATE TABLE ...) для PostgreSQL
-            await connection.execute('''
-                CREATE TABLE IF NOT EXISTS bots (
-                    bot_token TEXT PRIMARY KEY,
-                    tg_id INT
-                );
-            ''')
+
+            await connection.execute("""
+                CREATE TABLE IF NOT EXISTS users_posts(
+                tg_id INTEGER PRIMARY KEY,
+                post_id INTEGER,
+                message_id TEXT
+            )""")
+
 
             await connection.execute('''
                 CREATE TABLE IF NOT EXISTS courses (
@@ -77,6 +79,75 @@ class DataBase:
                 );
             ''')
 
+    async def add_user_post(self, tg_id: int, post_id: int) -> None:
+        if self.pool is None:
+            await self.connect()
+
+        async with self.pool.acquire() as connection:
+            await connection.execute(
+                f"""
+                INSERT OR REPLACE INTO users_posts
+                VALUES({tg_id}, {post_id}, {0})
+                """
+            )
+
+    async def get_post_id(self, tg_id: int) -> int:
+        if self.pool is None:
+            await self.connect()
+
+        async with self.pool.acquire() as connection:
+            post_id = await connection.execute(
+                f"""
+                SELECT post_id FROM users_posts
+                WHERE tg_id={tg_id}'
+                """
+            ).fetchone()
+
+            if post_id is not None:
+                return post_id[0]
+
+    async def get_message_or_user(self, tg_id=None, message_id=None, id=None, message=None) -> int:
+        if self.pool is None:
+            await self.connect()
+
+        async with self.pool.acquire() as connection:
+            if message:
+                message_id_data = await connection.execute(
+                    f"""
+                    SELECT message_id FROM users_posts
+                    WHERE tg_id={tg_id}
+                    """
+                ).fetchone()
+                await connection.commit()
+
+                if message_id_data is not None:
+                    return message_id_data[0]
+
+            elif id:
+                tg_id_data = await connection.execute(
+                    f"""
+                    SELECT tg_id FROM users_posts
+                    WHERE message_id={message_id}
+                    """
+                ).fetchone()
+                await connection.commit()
+
+                if tg_id_data is not None:
+                    return tg_id_data[0]
+
+    async def add_user_message(self, tg_id: int, message_id: int) -> None:
+        if self.pool is None:
+            await self.connect()
+
+        async with self.pool.acquire() as connection:
+            await connection.execute(
+                f"""
+                INSERT OR REPLACE INTO users_messages
+                VALUES({tg_id}, {message_id})
+                """
+            )
+            await connection.commit()
+
     async def add_bot(self, bot_token: str, tg_id: int):
         if self.pool is None:
             await self.connect()
@@ -89,7 +160,7 @@ class DataBase:
                 (?, ?)
             """, (bot_token, tg_id))
     async def add_course(
-            self, course_id: int, name: str, description: str, description_image: bytes, bot_token: str
+            self, course_id: int, name: str, description: str or None, description_image: bytes or None, bot_token: str
     ):
         if self.pool is None:
             await self.connect()
