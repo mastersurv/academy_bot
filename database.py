@@ -33,6 +33,15 @@ class DataBase:
         ''')
 
 		await self.execute_query('''
+		    CREATE TABLE IF NOT EXISTS subscription(
+				  sub_id INTEGER,
+				  tg_id int REFERENCES user(tg_id),
+				  created_at datetime,
+				  valid_till datetime
+				)
+		        ''')
+
+		await self.execute_query('''
             CREATE TABLE IF NOT EXISTS users_posts(
                 tg_id INTEGER PRIMARY KEY,
                 post_id INTEGER,
@@ -210,3 +219,15 @@ class DataBase:
 	async def get_creators_ids(self) -> list:
 		if self.conn is None:
 			await self.connect()
+
+	async def get_subscriptions(self):
+		if self.conn is None:
+			await self.connect()
+		subscriptions = await self.execute_query(
+			"select sub_id from subscription where tg_id = %d and valid_till > now()"
+		)
+		courses = await self.execute_query(
+			"select course_id from subscription_course where sub_id in (%s)", subscriptions
+		)
+		return courses
+
