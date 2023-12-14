@@ -22,10 +22,10 @@ async def generate_modules_keyboard(course_id: int) -> InlineKeyboardMarkup:
 	keyboard = InlineKeyboardMarkup()
 
 	for module_id, module_name in modules:
-		callback_data = f'module_{module_id}'  # TODO сверить с ТЗ колбэк дату
+		callback_data = f'module_{course_id}_{module_id}'
 		button = InlineKeyboardButton(module_name, callback_data=callback_data)
 		keyboard.add(button)
-	keyboard.add(InlineKeyboardButton("Назад", callback_data="back_courses"))
+	keyboard.add(InlineKeyboardButton("Назад", callback_data=f"back_courses"))
 
 	return keyboard
 
@@ -35,9 +35,9 @@ async def generate_lessons_keyboard(course_id: int, module_id: int) -> InlineKey
 	keyboard = InlineKeyboardMarkup()
 
 	for lesson_id, lesson_name in lessons:
-		callback_data = f'lesson_{lesson_id}'
+		callback_data = f'lesson_{course_id}_{module_id}_{lesson_id}'
 		button = InlineKeyboardButton(lesson_name, callback_data=callback_data)
 		keyboard.add(button)
-	keyboard.add(InlineKeyboardButton("Назад", callback_data="back_modules"))
+	keyboard.add(InlineKeyboardButton("Назад", callback_data=f"back_modules_{course_id}_{module_id}"))
 
 	return keyboard
