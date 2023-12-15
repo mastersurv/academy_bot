@@ -45,6 +45,13 @@ class DataBase:
 		        ''')
 
 		await self.execute_query('''
+		            CREATE TABLE IF NOT EXISTS user_courses(
+		                tg_id int REFERENCES users(tg_id),
+		                course_id INT REFERENCES courses(course_id)
+		            )
+		        ''')
+
+		await self.execute_query('''
             CREATE TABLE IF NOT EXISTS users_posts(
                 tg_id INTEGER PRIMARY KEY,
                 post_id INTEGER,
@@ -77,7 +84,6 @@ class DataBase:
                 module_title TEXT,
                 module_description TEXT,
                 module_image TEXT,
-                bot_token TEXT
             )
         ''')
 
@@ -174,22 +180,16 @@ class DataBase:
             (?, ?)
         """, (bot_token, tg_id))
 
-	async def add_course(
-			self, course_id: int, name: str, description: str or None, description_image: bytes or None, bot_token: str
-	):
-		if self.conn is None:
-			await self.connect()
-
-		await self.execute_query("""
-            INSERT OR REPLACE INTO courses
-            (course_id, course_title, course_description, course_image, bot_token)
-            VALUES
-            (?, ?, ?, ?, ?)
-        """, (course_id, name, description, description_image, bot_token))
+	async def add_course(self, course_id: int, course_name: int, course_description: int, course_image_id: int,
+	                     promocode: str):
+		query = '''
+	            INSERT OR REPLACE INTO courses (course_id, course_name, course_description, course_image_id, promocode)
+	            VALUES (?, ?, ?, ?, ?)
+	        '''
+		await self.execute_query(query, (course_id, course_name, course_description, course_image_id, promocode))
 
 	async def add_module(
-			self, module_id: int, course_id: int, module_title: str, module_description: str, module_image: bytes,
-			bot_token: str
+			self, module_id: int, course_id: int, module_title: str, module_description: str, module_image: str
 	):
 		if self.conn is None:
 			await self.connect()
@@ -198,13 +198,13 @@ class DataBase:
            INSERT OR REPLACE INTO modules
            (module_id, course_id, module_title, module_description, module_description, module_image, bot_token)
            VALUES
-           (?, ?, ?, ?, ?, ?)
-        """, (module_id, course_id, module_title, module_description, module_image, bot_token))
+           (?, ?, ?, ?, ?)
+        """, (module_id, course_id, module_title, module_description, module_image))
 
 	async def add_lesson(
 			self, lesson_id: int, module_id: int, course_id: int, lesson_title: str, lesson_description: str,
-			audio: bytes or None, photo: bytes or None, video: bytes or None,
-			video_note: bytes or None, document: bytes or None, document_name: str or None
+			audio: str or None, photo: str or None, video: str or None,
+			video_note: str or None, document: str or None, document_name: str or None
 	):
 		if self.conn is None:
 			await self.connect()
@@ -332,17 +332,40 @@ class DataBase:
 		subscription_data = {row[0]: row[1] for row in result}
 		return subscription_data
 
-	async def get_available_courses(self):
-		"""Получение списка доступных курсов"""
-		if self.conn is None:
-			await self.connect()
-		subscriptions = await self.execute_query(
-			"select sub_id from subscription where tg_id = %d and valid_till > now()"
-		)
-		courses = await self.execute_query(
-			"select course_id from subscription_course where sub_id in (%s)", subscriptions
-		)
-		return courses
+	async def get_promocodes(self):
+		query = '''
+	            SELECT promocode
+	            FROM promocodes
+	        '''
+		result = await self.execute_query(query)
+		promocodes = [row[0] for row in result]
+		return promocodes
+
+	async def get_promocode(self, course_id):
+		query = '''
+	            SELECT promocode
+	            FROM promocodes
+	            WHERE course_id = ?
+	        '''
+		result = await self.execute_query(query, (course_id,))
+		promocodes = [row[0] for row in result]
+		return promocodes
+
+	async def get_user_courses(self, tg_id):
+		query = '''
+	            SELECT course_id
+	            FROM user_courses
+	            WHERE tg_id = ?
+	        '''
+		result = await self.execute_query(query, (tg_id,))
+		return [row[0] for row in result]
+
+	async def add_user_course(self, tg_id, course_id):
+		query = '''
+	            INSERT INTO user_courses (tg_id, course_id)
+	            VALUES (?, ?)
+	        '''
+		await self.execute_query(query, (tg_id, course_id))
 
 	async def generate_unique_course_id(self):
 		while True:
