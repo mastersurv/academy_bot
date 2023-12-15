@@ -30,6 +30,26 @@ to_menu = InlineKeyboardMarkup().add(
 )
 
 
+course_creation = InlineKeyboardMarkup().add(
+    InlineKeyboardButton(
+        text="Созданные курсы",
+        callback_data="created_courses"
+    )
+).add(
+    InlineKeyboardButton(
+        text="Создать курс",
+        callback_data="create_course"
+    )
+)
+
+to_course_creation = InlineKeyboardMarkup().add(
+    InlineKeyboardButton(
+        text="К созданию курсов",
+        callback_data="creation_courses"
+    )
+)
+
+
 back_to_modules = InlineKeyboardMarkup().add(
     InlineKeyboardButton(
         text="Назад",

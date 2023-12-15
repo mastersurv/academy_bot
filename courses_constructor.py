@@ -108,7 +108,7 @@ class MyBot:
         self.dp.register_message_handler(callback=edit_course_description, state=SettingsStates.course_description, content_types=["text"])
         self.dp.register_message_handler(callback=edit_course_image, state=SettingsStates.course_image, content_types=["photo"])
 
-        self.dp.register_message_handler(callback=self.text_handler, state="*", content_types=["text"])
+        self.dp.register_message_handler(callback=self.text_handler, state="*", content_types=["photo"])
 
     def run(self):
         self.register_handlers()

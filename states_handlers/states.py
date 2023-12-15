@@ -7,7 +7,7 @@ class MenuStates(StatesGroup):
 
 
 class SettingsStates(StatesGroup):
-    add_bot = State()
+    create_course = State()
     settings = State()
 
     course_name = State()
@@ -16,7 +16,7 @@ class SettingsStates(StatesGroup):
 
     module_name = State()
     module_description = State()
-    module_blob = State()
+    module_image = State()
 
     lesson_name = State()
     lesson_description = State()
