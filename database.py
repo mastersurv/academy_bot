@@ -1,4 +1,6 @@
 import aiosqlite
+import random
+import string
 
 
 class DataBase:
@@ -50,11 +52,18 @@ class DataBase:
         ''')
 
 		await self.execute_query('''
+		    CREATE TABLE IF NOT EXISTS promocodes (
+		            promocode TEXT PRIMARY KEY
+					course_id INT REFERENCES courses(course_id)
+		        )
+		    ''')
+
+		await self.execute_query('''
             CREATE TABLE IF NOT EXISTS courses (
                 course_id INT PRIMARY KEY,
                 course_title TEXT,
                 course_description TEXT,
-                course_image BLOB,
+                course_image TEXT,
                 bot_token TEXT
             )
         ''')
@@ -65,7 +74,7 @@ class DataBase:
                 course_id INT REFERENCES courses(course_id),
                 module_title TEXT,
                 module_description TEXT,
-                module_image BLOB,
+                module_image TEXT,
                 bot_token TEXT
             )
         ''')
@@ -77,11 +86,11 @@ class DataBase:
                 course_id INT REFERENCES courses(course_id),
                 lesson_title TEXT,
                 lesson_description TEXT,
-                audio BLOB,
-                photo BLOB,
-                video BLOB,
-                video_note BLOB,
-                document BLOB,
+                audio TEXT,
+                photo TEXT,
+                video TEXT,
+                video_note TEXT,
+                document TEXT,
                 document_name TEXT
             )
         ''')
@@ -231,3 +240,25 @@ class DataBase:
 		)
 		return courses
 
+	async def generate_unique_course_id(self):
+		while True:
+			course_id = random.randint(10000000, 99999999)  # Генерация восьмизначного числа
+			# Проверка, есть ли уже такой course_id в базе
+			existing_courses = await self.execute_query(
+				'SELECT course_id FROM courses WHERE course_id = %s', course_id
+			)
+			if not existing_courses:
+				return course_id
+
+
+	async def generate_unique_promocode(self, course_id):
+		while True:
+			# Генерация промокода из 8 случайных букв
+			promocode = ''.join(random.choice(string.ascii_uppercase) for _ in range(8))
+			# Проверка, есть ли уже такой промокод в базе для данного курса
+			existing_promocodes = await self.execute_query(
+				'SELECT promocode FROM promocodes WHERE promocode = %s AND course_id = %s',
+				promocode, course_id
+			)
+			if not existing_promocodes:
+				return promocode
