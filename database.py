@@ -1,3 +1,4 @@
+import datetime
 import aiosqlite
 import random
 import string
@@ -30,14 +31,14 @@ class DataBase:
 		await self.execute_query('''
             CREATE TABLE IF NOT EXISTS users(
                 tg_id INTEGER PRIMARY KEY,
-                full_name TEXT,
+                full_name TEXT
             )
         ''')
 
 		await self.execute_query('''
 		    CREATE TABLE IF NOT EXISTS subscription(
 				  sub_id INTEGER,
-				  tg_id int REFERENCES user(tg_id),
+				  tg_id int REFERENCES users(tg_id),
 				  created_at datetime,
 				  valid_till datetime
 				)
@@ -53,20 +54,21 @@ class DataBase:
 
 		await self.execute_query('''
 		    CREATE TABLE IF NOT EXISTS promocodes (
-		            promocode TEXT PRIMARY KEY
+		            promocode TEXT PRIMARY KEY,
 					course_id INT REFERENCES courses(course_id)
 		        )
 		    ''')
 
 		await self.execute_query('''
-            CREATE TABLE IF NOT EXISTS courses (
-                course_id INT PRIMARY KEY,
-                course_title TEXT,
-                course_description TEXT,
-                course_image TEXT,
-                bot_token TEXT
-            )
-        ''')
+		    CREATE TABLE IF NOT EXISTS courses (
+		        course_id INTEGER PRIMARY KEY,
+		        owner_id INTEGER REFERENCES users(tg_id),
+		        course_name TEXT,
+		        course_description TEXT,
+		        course_preview TEXT,
+		        promocode TEXT
+		    )
+		''')
 
 		await self.execute_query('''
             CREATE TABLE IF NOT EXISTS modules (
@@ -216,20 +218,122 @@ class DataBase:
         """, (lesson_id, module_id, course_id, lesson_title, lesson_description,
 		      audio, photo, video, video_note, document, document_name))
 
-	async def get_courses_ids(self):
-		if self.conn is None:
-			await self.connect()
-		courses_ids = await self.execute_query("""
-          SELECT course_id FROM courses
-        """)
-		return courses_ids
+	async def get_courses_ids(self, tg_id):
+		query = '''
+	            SELECT courses_ids
+	            FROM users
+	            WHERE tg_id = ?
+	        '''
+		user_courses_ids = await self.execute_query(query, (tg_id,))
+		return user_courses_ids[0][0].split(',') if user_courses_ids else []
 
 	# ------------------- оставшиеся методы -------------------
 	async def get_creators_ids(self) -> list:
 		if self.conn is None:
 			await self.connect()
+		current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-	async def get_subscriptions(self):
+		creators_ids = await self.execute_query('''
+	            SELECT u.tg_id
+	            FROM users u
+	            JOIN subscription s ON u.tg_id = s.tg_id
+	            WHERE s.valid_till > '{}'
+	        '''.format(current_datetime))
+
+		creator_ids = [row[0] for row in creators_ids]
+
+		return creator_ids
+
+	async def get_course_modules(self, course_id):
+		query = '''
+	            SELECT module_id, module_name
+	            FROM modules
+	            WHERE course_id = ?
+	        '''
+		modules_info = await self.execute_query(query, (course_id,))
+		return modules_info
+
+	async def get_module_lessons(self, course_id, module_id):
+		query = '''
+	            SELECT lesson_id, lesson_name
+	            FROM lessons
+	            WHERE course_id = ? AND module_id = ?
+	        '''
+		lessons_info = await self.execute_query(query, (course_id, module_id))
+		return lessons_info
+
+	async def get_promocodes_dict(self):
+		query = '''
+	            SELECT promocode, course_id
+	            FROM promocodes
+	        '''
+		promocodes_info = await self.execute_query(query)
+		promocodes_dict = {row[0]: row[1] for row in promocodes_info}
+		return promocodes_dict
+
+	async def add_course_to_user(self, tg_id, course_id):
+		current_courses_ids = await self.get_courses_ids(tg_id)
+
+		if current_courses_ids is not None:
+			# Если у пользователя уже есть какие-то курсы
+			new_courses_ids = f'{current_courses_ids},{course_id}'
+		else:
+			# Если у пользователя еще нет курсов
+			new_courses_ids = str(course_id)
+
+		# Обновляем поле courses_ids в таблице users
+		update_query = '''
+	            UPDATE users
+	            SET courses_ids = ?
+	            WHERE tg_id = ?
+	        '''
+		await self.execute_query(update_query, (new_courses_ids, tg_id))
+
+	async def get_course_name(self, course_id):
+		query = '''
+	            SELECT course_name
+	            FROM courses
+	            WHERE course_id = ?
+	        '''
+		course_info = await self.execute_query(query, (course_id,))
+		return course_info[0][0] if course_info else None
+
+	async def get_users_ids(self):
+		query = '''
+	            SELECT tg_id
+	            FROM users
+	        '''
+		users_ids = await self.execute_query(query)
+		return [row[0] for row in users_ids]
+
+	async def get_number_of_created_courses(self, tg_id):
+		query = '''
+	            SELECT COUNT(*) as num_created_courses
+	            FROM courses
+	            WHERE owner_id = ?
+	        '''
+		result = await self.execute_query(query, (tg_id,))
+		return result[0][0] if result else 0
+
+	async def get_subscription_data(self):
+		query = '''
+	            SELECT status, COUNT(*) as num_courses
+	            FROM (
+	                SELECT
+	                    CASE
+	                        WHEN valid_till >= datetime('now') THEN 'active'
+	                        ELSE 'expired'
+	                    END as status
+	                FROM subscription
+	            ) AS sub_status
+	            GROUP BY status
+	        '''
+		result = await self.execute_query(query)
+		subscription_data = {row[0]: row[1] for row in result}
+		return subscription_data
+
+	async def get_available_courses(self):
+		"""Получение списка доступных курсов"""
 		if self.conn is None:
 			await self.connect()
 		subscriptions = await self.execute_query(
@@ -250,7 +354,6 @@ class DataBase:
 			if not existing_courses:
 				return course_id
 
-
 	async def generate_unique_promocode(self, course_id):
 		while True:
 			# Генерация промокода из 8 случайных букв
@@ -262,3 +365,20 @@ class DataBase:
 			)
 			if not existing_promocodes:
 				return promocode
+
+# import asyncio
+#
+# if __name__ == '__main__':
+# 	db = DataBase('test.db')
+#
+# 	# Создайте цикл событий asyncio
+# 	loop = asyncio.get_event_loop()
+#
+# 	# Запустите асинхронную функцию в цикле событий
+# 	loop.run_until_complete(db.create_tables())
+#
+# 	# Закройте цикл событий после выполнения
+#
+#
+# 	print(loop.run_until_complete(db.get_creators_ids()))
+# 	loop.close()
