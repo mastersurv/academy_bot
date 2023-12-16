@@ -373,6 +373,13 @@ class DataBase:
 	        '''
 		await self.execute_query(query, (tg_id, course_id))
 
+	async def add_promocode(self, promocode, course_id):
+		query = '''
+	        INSERT OR REPLACE INTO promocodes (promocode, course_id)
+	        VALUES (?, ?)
+	    '''
+		await self.execute_query(query, (promocode, course_id))
+
 	async def generate_unique_course_id(self):
 		while True:
 			course_id = random.randint(10000000, 99999999)  # Генерация восьмизначного числа
@@ -389,8 +396,8 @@ class DataBase:
 			promocode = ''.join(random.choice(string.ascii_uppercase) for _ in range(8))
 			# Проверка, есть ли уже такой промокод в базе для данного курса
 			existing_promocodes = await self.execute_query(
-				'SELECT promocode FROM promocodes WHERE promocode = %s AND course_id = %s',
-				promocode, course_id
+				'SELECT promocode FROM promocodes WHERE promocode = ? AND course_id = ?',
+				(promocode, course_id)
 			)
 			if not existing_promocodes:
 				return promocode
@@ -416,25 +423,12 @@ class DataBase:
 
 	async def get_lesson_info(self, course_id, module_id, lesson_id):
 		query = '''
-	            SELECT lesson_title, lesson_description, audio, photo, video, video_note, document, document_name
-	            FROM lessons
-	            WHERE course_id = ? AND module_id = ? AND lesson_id = ?
-	        '''
+	        SELECT lesson_title, lesson_description, audio, photo, video, video_note, document, document_name
+	        FROM lessons
+	        WHERE course_id = ? AND module_id = ? AND lesson_id = ?
+	    '''
 		result = await self.execute_query(query, (course_id, module_id, lesson_id))
-		if result:
-			lesson_info = {
-				"lesson_title": result[0][0],
-				"lesson_description": result[0][1],
-				"audio": result[0][2],
-				"photo": result[0][3],
-				"video": result[0][4],
-				"video_note": result[0][5],
-				"document": result[0][6],
-				"document_name": result[0][7]
-			}
-			return lesson_info
-		else:
-			return None
+		return result[0] if result else None
 
 	async def get_modules_numbers(self, course_id):
 		query = '''
@@ -588,6 +582,12 @@ class DataBase:
 #
 # 	# вывод данных по уроку
 # 	print(loop.run_until_complete(db.get_lesson_info(1, 1, 1)), 'Урок')
+#
+#
+# 	# Генерация промокода
+# 	promo = loop.run_until_complete(db.generate_unique_promocode(1))
+# 	# Добавление промокода
+# 	loop.run_until_complete(db.add_promocode(promo, 1))
 #
 # 	# Закройте цикл событий после выполнения
 # 	loop.close()
