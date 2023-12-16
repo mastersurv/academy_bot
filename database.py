@@ -18,8 +18,9 @@ class DataBase:
 
 	async def execute_query(self, query, *args):
 		async with self.conn.cursor() as cursor:
-			await cursor.execute(query, args)
+			await cursor.execute(query, *args)
 			result = await cursor.fetchall()
+		await self.conn.commit()
 		return result
 
 	async def create_tables(self):
@@ -72,7 +73,7 @@ class DataBase:
 		        owner_id INTEGER REFERENCES users(tg_id),
 		        course_name TEXT,
 		        course_description TEXT,
-		        course_preview TEXT,
+		        course_image_id TEXT,
 		        promocode TEXT
 		    )
 		''')
@@ -83,7 +84,7 @@ class DataBase:
                 course_id INT REFERENCES courses(course_id),
                 module_title TEXT,
                 module_description TEXT,
-                module_image TEXT,
+                module_image TEXT
             )
         ''')
 
@@ -180,13 +181,15 @@ class DataBase:
             (?, ?)
         """, (bot_token, tg_id))
 
-	async def add_course(self, course_id: int, course_name: int, course_description: int, course_image_id: int,
+	async def add_course(self, course_id: int, owner_id: int, course_name: str, course_description: str, course_image_id: int,
 	                     promocode: str):
 		query = '''
-	            INSERT OR REPLACE INTO courses (course_id, course_name, course_description, course_image_id, promocode)
-	            VALUES (?, ?, ?, ?, ?)
+	            INSERT OR REPLACE INTO courses (course_id, owner_id, course_name, 
+	            course_description, course_image_id, promocode)
+	            VALUES (?, ?, ?, ?, ?, ?)
 	        '''
-		await self.execute_query(query, (course_id, course_name, course_description, course_image_id, promocode))
+		await self.execute_query(query, (course_id, owner_id, course_name,
+		                                 course_description, course_image_id, promocode))
 
 	async def add_module(
 			self, module_id: int, course_id: int, module_title: str, module_description: str, module_image: str
@@ -196,27 +199,30 @@ class DataBase:
 
 		await self.execute_query("""
            INSERT OR REPLACE INTO modules
-           (module_id, course_id, module_title, module_description, module_description, module_image, bot_token)
+           (module_id, course_id, module_title, module_description, module_image)
            VALUES
            (?, ?, ?, ?, ?)
         """, (module_id, course_id, module_title, module_description, module_image))
 
 	async def add_lesson(
 			self, lesson_id: int, module_id: int, course_id: int, lesson_title: str, lesson_description: str,
-			audio: str or None, photo: str or None, video: str or None,
-			video_note: str or None, document: str or None, document_name: str or None
+			audio: str = None, photo: str = None, video: str = None,
+			video_note: str = None, document: str = None, document_name: str = None
 	):
 		if self.conn is None:
 			await self.connect()
 
-		await self.execute_query("""
-          INSERT OR REPLACE INTO modules
-          (lesson_id, module_id, course_id, lesson_title, lesson_description, 
-          audio, photo, video, video_note, document, document_name, bot_token)
-          VALUES
-          (?, ?, ?, ?, ?, ?)
-        """, (lesson_id, module_id, course_id, lesson_title, lesson_description,
-		      audio, photo, video, video_note, document, document_name))
+		query = '''
+		        INSERT OR REPLACE INTO lessons (
+		            lesson_id, module_id, course_id, lesson_title, lesson_description,
+		            audio, photo, video, video_note, document, document_name
+		        )
+		        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		    '''
+		await self.execute_query(query, (
+			lesson_id, module_id, course_id, lesson_title, lesson_description,
+			audio, photo, video, video_note, document, document_name
+		))
 
 	async def get_courses_ids(self, tg_id):
 		query = '''
@@ -561,8 +567,27 @@ class DataBase:
 # 	# Запустите асинхронную функцию в цикле событий
 # 	loop.run_until_complete(db.create_tables())
 #
+# 	# Добавление КУРСА
+# 	loop.run_until_complete(db.add_course(course_id=1, owner_id=1, course_name='python base',
+# 	                                      course_description='base funcs in python',
+# 	                                      course_image_id=123, promocode='123'))
+#
+# 	# вывод данных по курсу
+# 	print(loop.run_until_complete(db.get_course_info(1)), 'Курс')
+#
+# 	# Добавление МОДУЛЯ
+# 	loop.run_until_complete(db.add_module(module_id=1, course_id=1, module_title='1. Variables',
+# 	                                      module_description='Test', module_image='brbrbrbbr'))
+#
+# 	# вывод данных по модулю
+# 	print(loop.run_until_complete(db.get_module_info(1, 1)), 'Модуль')
+#
+# 	# Добавление УРОКА
+# 	loop.run_until_complete(db.add_lesson(lesson_id=1, module_id=1, course_id=1, lesson_title='Первый урок',
+# 	                                      lesson_description='Описание', video='video_id'))
+#
+# 	# вывод данных по уроку
+# 	print(loop.run_until_complete(db.get_lesson_info(1, 1, 1)), 'Урок')
+#
 # 	# Закройте цикл событий после выполнения
-#
-#
-# 	print(loop.run_until_complete(db.get_creators_ids()))
 # 	loop.close()
