@@ -389,6 +389,167 @@ class DataBase:
 			if not existing_promocodes:
 				return promocode
 
+	# Запросы для курсов, модулей, уроков
+	async def get_course_info(self, course_id):
+		query = '''
+	        SELECT course_name, course_description, course_image_id
+	        FROM courses
+	        WHERE course_id = ?
+	    '''
+		result = await self.execute_query(query, (course_id,))
+		return result[0] if result else None
+
+	async def get_module_info(self, course_id, module_id):
+		query = '''
+	        SELECT module_title, module_description, module_image
+	        FROM modules
+	        WHERE course_id = ? AND module_id = ?
+	    '''
+		result = await self.execute_query(query, (course_id, module_id))
+		return result[0] if result else None
+
+	async def get_lesson_info(self, course_id, module_id, lesson_id):
+		query = '''
+	            SELECT lesson_title, lesson_description, audio, photo, video, video_note, document, document_name
+	            FROM lessons
+	            WHERE course_id = ? AND module_id = ? AND lesson_id = ?
+	        '''
+		result = await self.execute_query(query, (course_id, module_id, lesson_id))
+		if result:
+			lesson_info = {
+				"lesson_title": result[0][0],
+				"lesson_description": result[0][1],
+				"audio": result[0][2],
+				"photo": result[0][3],
+				"video": result[0][4],
+				"video_note": result[0][5],
+				"document": result[0][6],
+				"document_name": result[0][7]
+			}
+			return lesson_info
+		else:
+			return None
+
+	async def get_modules_numbers(self, course_id):
+		query = '''
+	            SELECT COUNT(*) as num_modules
+	            FROM modules
+	            WHERE course_id = ?
+	        '''
+		result = await self.execute_query(query, (course_id,))
+		return result[0][0] if result else 0
+
+	async def get_lessons_numbers(self, course_id, module_id):
+		query = '''
+	            SELECT COUNT(*) as num_lessons
+	            FROM lessons
+	            WHERE course_id = ? AND module_id = ?
+	        '''
+		result = await self.execute_query(query, (course_id, module_id))
+		return result[0][0] if result else 0
+
+	# Обновления данных в таблицах
+	async def update_course_name(self, course_id, new_name):
+		query = '''
+	            UPDATE courses
+	            SET course_name = ?
+	            WHERE course_id = ?
+	        '''
+		await self.execute_query(query, (new_name, course_id))
+
+	async def update_module_name(self, course_id, module_id, new_name):
+		query = '''
+	            UPDATE modules
+	            SET module_name = ?
+	            WHERE course_id = ? AND module_id = ?
+	        '''
+		await self.execute_query(query, (new_name, course_id, module_id))
+
+	async def update_lesson_title(self, course_id, module_id, lesson_id, new_title):
+		query = '''
+	            UPDATE lessons
+	            SET lesson_title = ?
+	            WHERE course_id = ? AND module_id = ? AND lesson_id = ?
+	        '''
+		await self.execute_query(query, (new_title, course_id, module_id, lesson_id))
+
+	async def update_course_description(self, course_id, new_description):
+		query = '''
+	            UPDATE courses
+	            SET course_description = ?
+	            WHERE course_id = ?
+	        '''
+		await self.execute_query(query, (new_description, course_id))
+
+	async def update_module_description(self, course_id, module_id, new_description):
+		query = '''
+	            UPDATE modules
+	            SET module_description = ?
+	            WHERE course_id = ? AND module_id = ?
+	        '''
+		await self.execute_query(query, (new_description, course_id, module_id))
+
+	async def update_lesson_description(self, course_id, module_id, lesson_id, new_description):
+		query = '''
+	            UPDATE lessons
+	            SET lesson_description = ?
+	            WHERE course_id = ? AND module_id = ? AND lesson_id = ?
+	        '''
+		await self.execute_query(query, (new_description, course_id, module_id, lesson_id))
+
+	async def update_course_image(self, course_id, new_image):
+		query = '''
+	            UPDATE courses
+	            SET course_image_id = ?
+	            WHERE course_id = ?
+	        '''
+		await self.execute_query(query, (new_image, course_id))
+
+	async def update_module_image(self, course_id, module_id, new_image):
+		query = '''
+	            UPDATE modules
+	            SET module_image = ?
+	            WHERE course_id = ? AND module_id = ?
+	        '''
+		await self.execute_query(query, (new_image, course_id, module_id))
+
+	async def update_lesson_image(self, course_id, module_id, lesson_id, new_image):
+		query = '''
+	            UPDATE lessons
+	            SET photo = ?
+	            WHERE course_id = ? AND module_id = ? AND lesson_id = ?
+	        '''
+		await self.execute_query(query, (new_image, course_id, module_id, lesson_id))
+
+	async def update_lesson_materials(self, course_id, module_id, lesson_id, materials):
+		valid_materials = {
+			'audio': 'audio',
+			'photo': 'photo',
+			'video': 'video',
+			'video_note': 'video_note',
+			'document': 'document',
+			'document_name': 'document_name'
+		}
+
+		update_query = 'UPDATE lessons SET '
+
+		for key, field in valid_materials.items():
+			if key in materials and materials[key] is not None:
+				update_query += f'{field} = ?, '
+
+		# Удаляем последнюю запятую и пробел
+		update_query = update_query.rstrip(', ')
+
+		update_query += ' WHERE course_id = ? AND module_id = ? AND lesson_id = ?'
+
+		# Собираем значения для запроса
+		values = [materials[key] for key in valid_materials if key in materials and materials[key] is not None]
+		values.extend([course_id, module_id, lesson_id])
+
+		# Выполняем запрос
+		await self.execute_query(update_query, values)
+
+
 # import asyncio
 #
 # if __name__ == '__main__':
