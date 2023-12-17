@@ -11,5 +11,7 @@ async def generate_courses_keyboard(courses_ids_list: list) -> InlineKeyboardMar
         callback_data = f'course_{course_id}'
         button = InlineKeyboardButton(f"{num + 1}. {course_name.title()}", callback_data=callback_data)
         keyboard.add(button)
-
+    keyboard.add(
+        InlineKeyboardButton(text="Назад", callback_data="menu")
+    )
     return keyboard

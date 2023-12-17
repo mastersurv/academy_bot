@@ -540,12 +540,26 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         except:
             pass
 
-    elif callback[:17] == "check_demo_lesson":
+    elif callback[:17] == "check_demo_lesson" or callback[:6] == "lesson":
         course_id = int(callback.split("_")[3])
         module_id = int(callback.split("_")[4])
         lesson_id = int(callback.split("_")[5])
         lesson_name, text, voice_id, photo_id, video_id, video_note_id, document_id = db.get_lesson_info(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
 
+        keyboard = InlineKeyboardMarkup().add(
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
+                )
+            )
+
+        if callback[:6] == "lesson":
+            keyboard = InlineKeyboardMarkup().add(
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=f"module_{course_id}_{module_id}"
+                )
+            )
         await bot.delete_message(
             chat_id=chat,
             message_id=m_id
@@ -561,10 +575,30 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             video=video_id,
             video_note=video_note_id,
             document=document_id,
-            markup=InlineKeyboardMarkup().add(
-                InlineKeyboardButton(
-                    text="Назад",
-                    callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
-                )
-            )
+            markup=keyboard
+        )
+
+    elif callback[:6] in ["course", "module"]:
+        course_id = int(callback.split("_")[1])
+
+        if callback[:6] == "course":
+            name, description, image_id = db.get_course_info(course_id=course_id)
+            keyboard = await generate_modules_keyboard(course_id=course_id, passing=True)
+
+        else:
+            module_id = int(callback.split("_")[2])
+            name, description, image_id = db.get_module_info(course_id=course_id, module_id=module_id)
+            keyboard = await generate_lessons_keyboard(course_id=course_id, module_id=module_id, passing=True)
+
+        await bot.delete_message(
+            chat_id=chat,
+            message_id=m_id
+        )
+
+        await bot.send_photo(
+            chat_id=chat,
+            caption=f"<b>{name}</b>\n\n{description}",
+            parse_mode="html",
+            photo=image_id,
+            reply_markup=keyboard
         )
