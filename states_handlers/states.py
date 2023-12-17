@@ -20,4 +20,4 @@ class SettingsStates(StatesGroup):
 
     lesson_name = State()
     lesson_description = State()
-    lesson_blob = State()
+    lesson_material = State()

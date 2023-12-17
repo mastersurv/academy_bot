@@ -49,7 +49,7 @@ async def edit_module_image(message: Message, state: FSMContext):
                 ).add(
                     InlineKeyboardButton(
                         text="К настройкам курса",
-                        callback_data=f"create_settings_{course_id}"
+                        callback_data=f"course_settings_{course_id}"
                     )
                 )
             )

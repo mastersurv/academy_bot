@@ -37,7 +37,7 @@ async def generate_modules_settings_keyboard(course_id: int, module_id: int) -> 
     ).add(
         InlineKeyboardButton(
             text="Назад",
-            callback_data=f"module_settings_{course_id}_{module_id}"
+            callback_data=f"created_modules_{course_id}"
         )
     )
 

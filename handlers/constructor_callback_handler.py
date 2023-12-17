@@ -6,10 +6,14 @@ from aiogram.dispatcher.dispatcher import FSMContext
 from utils.functions.get_bot_and_db import get_bot_and_db
 
 from utils.functions.generate_courses_markup import generate_courses_keyboard
+from utils.functions.generate_modules_markup import generate_modules_keyboard
+from utils.functions.generate_lessons_markup import generate_lessons_keyboard
 from utils.functions.generate_created_courses_markup import generate_created_courses_keyboard
 from utils.functions.generate_course_settings_markup import generate_courses_settings_keyboard
 from utils.functions.generate_modules_settings_markup import generate_modules_settings_keyboard
-from utils.functions.generate_modules_markup import generate_modules_keyboard
+from utils.functions.generate_lessons_settings_markup import generate_lessons_settings_keyboard
+
+from utils.functions.send_lesson import send_lesson
 
 from states_handlers.states import SettingsStates, MenuStates
 from blanks.bot_markup import (
@@ -208,6 +212,9 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         mode = callback.split("_")[2]
         course_id = int(callback.split("_")[3])
 
+        async with state.proxy() as data:
+            data["course_id"] = course_id
+
         try:
             await bot.edit_message_reply_markup(
                 chat_id=chat,
@@ -241,9 +248,10 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
     elif callback[:10] == "add_module":
         course_id = int(callback.split("_")[2])
-        new_module_id = db.get_modules_numbers(course_id=course_id)
+        new_module_id = db.get_modules_numbers(course_id=course_id) + 1
 
         async with state.proxy() as data:
+            data["course_id"] = course_id
             data["module_id"] = new_module_id
             data["mode"] = "creation"
 
@@ -308,6 +316,10 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         course_id = int(callback.split("_")[3])
         module_id = int(callback.split("_")[4])
 
+        async with state.proxy() as data:
+            data["course_id"] = course_id
+            data["module_id"] = module_id
+
         try:
             await bot.edit_message_reply_markup(
                 chat_id=chat,
@@ -325,14 +337,14 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         text = "Текст"
         if mode == "name":
             module_name = db.get_module_name(course_id=course_id)
-            text = f"Введите новое название курса.\nНынешнее название: <br>{module_name}</br>"
+            text = f"Введите новое название модуля.\nНынешнее название: <br>{module_name}</br>"
             await SettingsStates.module_name.set()
         elif mode == "description":
             module_description = db.get_module_description(course_id=course_id)
-            text = f"Введите новое описание курса.\nНынешнее описание: <pre>{module_description}</pre>"
-            await SettingsStates.course_description.set()
+            text = f"Введите новое описание модуля.\nНынешнее описание: <pre>{module_description}</pre>"
+            await SettingsStates.module_description.set()
         elif mode == "image":
-            text = f"Отправьте в бота новую аватарку курса."
+            text = f"Отправьте в бота новую аватарку модуля."
             await SettingsStates.module_image.set()
         try:
             await bot.edit_message_text(
@@ -368,43 +380,191 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             )
         )
 
-    elif callback == "lessons_settings":
-        await bot.edit_message_reply_markup(
-            chat_id=chat,
-            message_id=m_id,
-            reply_markup=lessons_settings_mp
-        )
+    elif callback[:15] == "created_lessons":
+        course_id = int(callback.split("_")[2])
+        module_id = int(callback.split("_")[3])
 
-    elif callback[-6:] == "lesson":
-        mode = callback.split("_")[0]
-        back_to_lessons = InlineKeyboardMarkup()
-        if mode == "edit":
-            back_to_lessons.add(
-                InlineKeyboardButton(
-                    text="Оставить нынешнюю настройку",
-                    callback_data="lessons_settings"
+        module_name = db.get_module_name(course_id=course_id, module_id=module_id)
+        created_lessons_keyboard = await generate_lessons_keyboard(course_id=course_id, module_id=module_id)
+        text = f"Модуль <b>{module_name}</b>\nСписок уроков:"
+        try:
+            await bot.edit_message_text(
+                chat_id=chat,
+                text=text,
+                parse_mode="html",
+                message_id=m_id,
+                reply_markup=created_lessons_keyboard.add(
+                    InlineKeyboardButton(
+                        text="К настройке модуля",
+                        callback_data=f"module_settings_{course_id}_{module_id}"
+                    )
                 )
             )
-        back_to_lessons.add(
-            InlineKeyboardButton(
-                text="Назад",
-                callback_data="lessons_settings"
+        except:
+            pass
+
+    elif callback[:15] == "lesson_settings":
+        course_id = int(callback.split("_")[2])
+        module_id = int(callback.split("_")[3])
+        lesson_id = int(callback.split("_")[4])
+
+        keyboard = await generate_lessons_settings_keyboard(course_id=course_id, module_id=module_id)
+        lesson_name = db.get_lesson_name(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
+        text = f"Настройка вашего урока:\n<b>{lesson_name}</b>"
+
+        try:
+            await bot.edit_message_text(
+                chat_id=chat,
+                text=text,
+                message_id=m_id,
+                reply_markup=keyboard
             )
+        except:
+            pass
+
+    elif callback[:10] == "add_lesson":
+        course_id = int(callback.split("_")[2])
+        module_id = int(callback.split("_")[3])
+        new_lesson_id = db.get_modules_numbers(course_id=course_id, module_id=module_id) + 1
+
+        async with state.proxy() as data:
+            data["course_id"] = course_id
+            data["module_id"] = module_id
+            data["lesson_id"] = new_lesson_id
+            data["mode"] = "creation"
+
+        text = "Введите название урока:"
+        await SettingsStates.lesson_name.set()
+
+        try:
+            await bot.edit_message_text(
+                text=text,
+                message_id=m_id,
+                reply_markup=InlineKeyboardMarkup().add(
+                    InlineKeyboardButton(
+                        text="К настройке модуля",
+                        callback_data=f"module_settings_{course_id}_{module_id}"
+                    )
+                )
+            )
+        except:
+            pass
+
+    elif callback[:20] == "edit_lesson_material":
+        course_id = int(callback.split("_")[3])
+        module_id = int(callback.split("_")[4])
+        lesson_id = int(callback.split("_")[5])
+
+        async with state.proxy() as data:
+            data["course_id"] = course_id
+            data["module_id"] = module_id
+            data["lesson_id"] = lesson_id
+
+        try:
+            await bot.edit_message_reply_markup(
+                chat_id=chat,
+                message_id=m_id,
+                reply_markup=InlineKeyboardMarkup().add(
+                    InlineKeyboardButton(
+                        text="К настройке урока",
+                        callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
+                    )
+                )
+            )
+        except:
+            pass
+
+        text = "Отправьте материал к уроку, доступные форматы:\n" \
+               "1) Текст (поддерживается форматирование)\n" \
+               "2) Фото\n" \
+               "3) Фото с текстом\n" \
+               "4) Голосовое сообщение\n" \
+               "5) Видео\n" \
+               "6) Видеосообщение\n" \
+               "7) PDF-файлы\n"
+
+        await SettingsStates.lesson_material.set()
+
+        try:
+            await bot.edit_message_text(
+                chat_id=chat,
+                text=text,
+                message_id=m_id,
+                parse_mode="html"
+            )
+        except:
+            pass
+
+    elif callback[:11] == "edit_lesson":
+        mode = callback.split("_")[2]
+        course_id = int(callback.split("_")[3])
+        module_id = int(callback.split("_")[4])
+        lesson_id = int(callback.split("_")[5])
+
+        async with state.proxy() as data:
+            data["course_id"] = course_id
+            data["module_id"] = module_id
+            data["lesson_id"] = lesson_id
+
+        try:
+            await bot.edit_message_reply_markup(
+                chat_id=chat,
+                message_id=m_id,
+                reply_markup=InlineKeyboardMarkup().add(
+                    InlineKeyboardButton(
+                        text="К настройке урока",
+                        callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
+                    )
+                )
+            )
+        except:
+            pass
+
+        text = "Текст"
+        if mode == "name":
+            lesson_name = db.get_lesson_name(course_id=course_id, module_id=module_id)
+            text = f"Введите новое название урока.\nНынешнее название: <br>{lesson_name}</br>"
+            await SettingsStates.lesson_name.set()
+        elif mode == "description":
+            lesson_description = db.get_lesson_description(course_id=course_id, module_id=module_id)
+            text = f"Введите новое описание урока.\nНынешнее описание: <pre>{lesson_description}</pre>"
+            await SettingsStates.lesson_description.set()
+
+        try:
+            await bot.edit_message_text(
+                chat_id=chat,
+                text=text,
+                message_id=m_id,
+                parse_mode="html"
+            )
+        except:
+            pass
+
+    elif callback[:17] == "check_demo_lesson":
+        course_id = int(callback.split("_")[3])
+        module_id = int(callback.split("_")[4])
+        lesson_id = int(callback.split("_")[5])
+        lesson_name, text, voice_id, photo_id, video_id, video_note_id, document_id = db.get_lesson_info(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
+
+        await bot.delete_message(
+            chat_id=chat,
+            message_id=m_id
         )
 
-        if mode == "add":
-            await SettingsStates.module_name.set()
-            await bot.edit_message_text(
-                chat_id=chat,
-                text="Введите название урока, либо вернитесь назад:",
-                message_id=m_id,
-                reply_markup=back_to_lessons
+        await send_lesson(
+            bot=bot,
+            chat_id=chat,
+            lesson_name=lesson_name,
+            text=text,
+            audio=voice_id,
+            photo=photo_id,
+            video=video_id,
+            video_note=video_note_id,
+            document=document_id,
+            markup=InlineKeyboardMarkup().add(
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
+                )
             )
-
-        elif mode == "edit":
-            await bot.edit_message_text(
-                chat_id=chat,
-                text="Введите название урока, либо вернитесь назад:",
-                message_id=m_id,
-                reply_markup=None
-            )
+        )
