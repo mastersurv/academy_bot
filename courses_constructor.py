@@ -5,7 +5,7 @@ from utils.db_api.database import DataBase
 from aiogram.types import Message
 from aiogram.dispatcher.dispatcher import FSMContext
 
-from blanks.bot_markup import menu
+from blanks.bot_markup import menu, admin_menu
 
 from handlers.constructor_callback_handler import constructor_callback_handler
 
@@ -30,15 +30,12 @@ class MyBot:
         tg_id = message.from_user.id
         username = message.from_user.username
 
-        users = [] # await self.db.get_users_ids()
-        # TODO
-        # creators_ids = await self.db.get_creators_ids()
-        # if tg_id in creators_ids:
-        #     menu.add(
-        #         InlineKeyboardButton(
-        #             text="Создание курсов",
-        #             callback_data="creation_courses"
-        #         ))
+        users = self.db.get_users_ids()
+        keyboard = menu
+
+        creators_ids = await self.db.get_creators_ids()
+        if tg_id in creators_ids:
+            keyboard = admin_menu
 
         await self.bot.send_message(
             chat_id=chat,
@@ -49,7 +46,7 @@ class MyBot:
             chat_id=chat,
             text="<b>Меню</b>",
             parse_mode="html",
-            reply_markup=menu
+            reply_markup=keyboard
         )
 
         if tg_id not in users:

@@ -29,6 +29,38 @@ to_menu = InlineKeyboardMarkup().add(
     )
 )
 
+admin_menu = InlineKeyboardMarkup().add(
+    InlineKeyboardButton(
+        text="Получить курс",
+        callback_data="get_course"
+    )
+).add(
+    InlineKeyboardButton(
+        text="Создание курсов",
+        callback_data="creation_courses"
+    )
+).add(
+    InlineKeyboardButton(
+        text="Библиотека",
+        callback_data="library"
+    )
+).add(
+    InlineKeyboardButton(
+        text="Аналитика курсов",
+        callback_data="courses_analytics"
+    )
+).add(
+    InlineKeyboardButton(
+        text="Промокоды",
+        callback_data="courses_promocodes"
+    )
+).add(
+    InlineKeyboardButton(
+        text="Задать вопрос",
+        callback_data="ask_question"
+    )
+)
+
 
 course_creation = InlineKeyboardMarkup().add(
     InlineKeyboardButton(
