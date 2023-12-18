@@ -111,7 +111,9 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
     elif callback == "creation_courses":
         course_number = await db.get_number_of_created_courses(tg_id=tg_id)
         subscription_data = await db.get_subscription_data()
+        print(subscription_data)
         user_status = await db.get_subscription_status(tg_id=tg_id)
+        print(user_status)
 
         text = f"Число курсов, которое вы можете создать: {subscription_data[user_status] - course_number}"
         try:

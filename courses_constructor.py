@@ -49,7 +49,7 @@ class MyBot:
             reply_markup=keyboard
         )
 
-        if tg_id not in users:
+        if tg_id not in await users:
             try:
                 await self.dp.bot.send_message(
                     chat_id=channel_id, text=f"Чат с пользователем @{username}",

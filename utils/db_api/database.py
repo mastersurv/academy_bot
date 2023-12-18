@@ -17,6 +17,8 @@ class DataBase:
             await self.conn.close()
 
     async def execute_query(self, query, *args):
+        if self.conn is None:
+            await self.connect()
         async with self.conn.cursor() as cursor:
             await cursor.execute(query, *args)
             result = await cursor.fetchall()
@@ -226,27 +228,33 @@ class DataBase:
         ))
 
     async def get_courses_ids(self, tg_id):
+        if self.conn is None:
+            await self.connect()
+
         query = '''
-	            SELECT courses_ids
-	            FROM users
-	            WHERE tg_id = ?
-	        '''
-        user_courses_ids = await self.execute_query(query, (tg_id,))
-        return user_courses_ids[0][0].split(',') if user_courses_ids else []
+            SELECT course_id
+            FROM courses
+            WHERE owner_id = ?
+        '''
+
+        user_courses = await self.execute_query(query, (tg_id,))
+        return [course[0] for course in user_courses] if user_courses else []
 
     # ------------------- оставшиеся методы -------------------
     async def get_creators_ids(self) -> list:
         if self.conn is None:
             await self.connect()
+
         current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        creators_ids = await self.execute_query('''
-	            SELECT u.tg_id
-	            FROM users u
-	            JOIN subscription s ON u.tg_id = s.tg_id
-	            WHERE s.valid_till > '{}'
-	        '''.format(current_datetime))
+        query = '''
+            SELECT u.tg_id
+            FROM users u
+            JOIN subscription s ON u.tg_id = s.tg_id
+            WHERE s.valid_till > ?
+        '''
 
+        creators_ids = await self.execute_query(query, (current_datetime,))
         creator_ids = [row[0] for row in creators_ids]
 
         return creator_ids
@@ -380,6 +388,29 @@ class DataBase:
 	        VALUES (?, ?)
 	    '''
         await self.execute_query(query, (promocode, course_id))
+
+    async def get_subscription_status(self, tg_id):
+        if self.conn is None:
+            await self.connect()
+
+        current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        query = '''
+            SELECT CASE
+                WHEN s.valid_till > ? THEN 'active'
+                ELSE 'user'
+            END AS subscription_status
+            FROM users u
+            LEFT JOIN subscription s ON u.tg_id = s.tg_id
+            WHERE u.tg_id = ?
+        '''
+
+        result = await self.execute_query(query, (current_datetime, tg_id))
+
+        if result:
+            return result[0][0]
+        else:
+            return 'user'
 
     async def generate_unique_course_id(self):
         while True:
