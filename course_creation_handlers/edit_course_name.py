@@ -35,7 +35,7 @@ async def edit_course_name(message: Message, state: FSMContext):
             await SettingsStates.course_description.set()
 
         else:
-            db.update_course_name(course_id=course_id, new_name=course_name)
+            await db.update_course_name(course_id=course_id, new_name=course_name)
 
             await bot.send_message(
                 chat_id=chat_id,

@@ -111,15 +111,13 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
     elif callback == "creation_courses":
         course_number = await db.get_number_of_created_courses(tg_id=tg_id)
         subscription_data = await db.get_subscription_data()
-        print(subscription_data)
         user_status = await db.get_subscription_status(tg_id=tg_id)
-        print(user_status)
 
-        text = f"Число курсов, которое вы можете создать: {subscription_data[user_status] - course_number}"
+        # text = f"Число курсов, которое вы можете создать: {subscription_data[user_status] - course_number}"
         try:
             await bot.edit_message_text(
                 chat_id=chat,
-                text=text,
+                text="text",
                 message_id=m_id,
                 reply_markup=course_creation
             )
@@ -148,9 +146,9 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         course_number = await db.get_number_of_created_courses(tg_id=tg_id)
         subscription_data = await db.get_subscription_data()
         user_status = await db.get_subscription_status(tg_id=tg_id)
-
+        user_status = 'active'
         if subscription_data[user_status] - course_number > 0:
-            new_course_id = db.generate_unique_course_id()
+            new_course_id = await db.generate_unique_course_id()
             async with state.proxy() as data:
                 data["course_id"] = new_course_id
                 data["mode"] = "creation"
@@ -173,7 +171,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
     elif callback[:15] == "course_settings":
         course_id = int(callback.split("_")[2])
         keyboard = await generate_courses_settings_keyboard(course_id=course_id)
-        course_name = db.get_course_name(course_id=course_id)
+        course_name = await db.get_course_name(course_id=course_id)
         text = f"Настройка вашего курса:\n<b>{course_name}</b>"
 
         await bot.delete_message(
@@ -184,12 +182,13 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         await bot.send_message(
             chat_id=chat,
             text=text,
+            parse_mode="html",
             reply_markup=keyboard
         )
 
     elif callback[:17] == "check_demo_course":
         course_id = int(callback.split("_")[3])
-        course_name, course_description, course_image = db.get_course_info(course_id=course_id)
+        course_name, course_description, course_image = await db.get_course_info(course_id=course_id)
 
         await bot.delete_message(
             chat_id=chat,
@@ -228,11 +227,11 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
         text = "Текст"
         if mode == "name":
-            course_name = db.get_course_name(course_id=course_id)
+            course_name = await db.get_course_name(course_id=course_id)
             text = f"Введите новое название курса.\nНынешнее название: <br>{course_name}</br>"
             await SettingsStates.course_name.set()
         elif mode == "description":
-            course_description = db.get_course_description(course_id=course_id)
+            course_description = await db.get_course_description(course_id=course_id)
             text = f"Введите новое описание курса.\nНынешнее описание: <pre>{course_description}</pre>"
             await SettingsStates.course_description.set()
         elif mode == "image":
@@ -250,7 +249,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
     elif callback[:10] == "add_module":
         course_id = int(callback.split("_")[2])
-        new_module_id = db.get_modules_numbers(course_id=course_id) + 1
+        new_module_id = await db.get_modules_numbers(course_id=course_id) + 1
 
         async with state.proxy() as data:
             data["course_id"] = course_id
@@ -263,6 +262,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         try:
             await bot.edit_message_text(
                 text=text,
+                chat_id=chat,
                 message_id=m_id,
                 reply_markup=InlineKeyboardMarkup().add(
                     InlineKeyboardButton(
@@ -271,12 +271,12 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
                     )
                 )
             )
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
     elif callback[:15] == "created_modules":
         course_id = int(callback.split("_")[2])
-        course_name = db.get_course_name(course_id=course_id)
+        course_name = await db.get_course_name(course_id=course_id)
         created_modules_keyboard = await generate_modules_keyboard(course_id=course_id)
         text = f"Курс <b>{course_name}</b>\nСписок модулей:"
         try:
@@ -300,7 +300,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         module_id = int(callback.split("_")[3])
 
         keyboard = await generate_modules_settings_keyboard(course_id=course_id, module_id=module_id)
-        module_name = db.get_module_name(course_id=course_id, module_id=module_id)
+        module_name = await db.get_module_name(course_id=course_id, module_id=module_id)
         text = f"Настройка вашего модуля:\n<b>{module_name}</b>"
 
         try:
@@ -338,11 +338,11 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
         text = "Текст"
         if mode == "name":
-            module_name = db.get_module_name(course_id=course_id)
+            module_name = await db.get_module_name(course_id=course_id)
             text = f"Введите новое название модуля.\nНынешнее название: <br>{module_name}</br>"
             await SettingsStates.module_name.set()
         elif mode == "description":
-            module_description = db.get_module_description(course_id=course_id)
+            module_description = await db.get_module_description(course_id=course_id)
             text = f"Введите новое описание модуля.\nНынешнее описание: <pre>{module_description}</pre>"
             await SettingsStates.module_description.set()
         elif mode == "image":
@@ -361,7 +361,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
     elif callback[:17] == "check_demo_module":
         course_id = int(callback.split("_")[3])
         module_id = int(callback.split("_")[4])
-        module_name, module_description, module_image = db.get_module_info(course_id=course_id, module_id=module_id)
+        module_name, module_description, module_image = await db.get_module_info(course_id=course_id, module_id=module_id)
 
         await bot.delete_message(
             chat_id=chat,
@@ -386,7 +386,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         course_id = int(callback.split("_")[2])
         module_id = int(callback.split("_")[3])
 
-        module_name = db.get_module_name(course_id=course_id, module_id=module_id)
+        module_name = await db.get_module_name(course_id=course_id, module_id=module_id)
         created_lessons_keyboard = await generate_lessons_keyboard(course_id=course_id, module_id=module_id)
         text = f"Модуль <b>{module_name}</b>\nСписок уроков:"
         try:
@@ -411,7 +411,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         lesson_id = int(callback.split("_")[4])
 
         keyboard = await generate_lessons_settings_keyboard(course_id=course_id, module_id=module_id)
-        lesson_name = db.get_lesson_name(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
+        lesson_name = await db.get_lesson_name(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
         text = f"Настройка вашего урока:\n<b>{lesson_name}</b>"
 
         try:
@@ -427,7 +427,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
     elif callback[:10] == "add_lesson":
         course_id = int(callback.split("_")[2])
         module_id = int(callback.split("_")[3])
-        new_lesson_id = db.get_modules_numbers(course_id=course_id, module_id=module_id) + 1
+        new_lesson_id = await db.get_modules_numbers(course_id=course_id, module_id=module_id) + 1
 
         async with state.proxy() as data:
             data["course_id"] = course_id
@@ -524,11 +524,11 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
         text = "Текст"
         if mode == "name":
-            lesson_name = db.get_lesson_name(course_id=course_id, module_id=module_id)
+            lesson_name = await db.get_lesson_name(course_id=course_id, module_id=module_id)
             text = f"Введите новое название урока.\nНынешнее название: <br>{lesson_name}</br>"
             await SettingsStates.lesson_name.set()
         elif mode == "description":
-            lesson_description = db.get_lesson_description(course_id=course_id, module_id=module_id)
+            lesson_description = await db.get_lesson_description(course_id=course_id, module_id=module_id)
             text = f"Введите новое описание урока.\nНынешнее описание: <pre>{lesson_description}</pre>"
             await SettingsStates.lesson_description.set()
 
@@ -546,7 +546,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         course_id = int(callback.split("_")[3])
         module_id = int(callback.split("_")[4])
         lesson_id = int(callback.split("_")[5])
-        lesson_name, text, voice_id, photo_id, video_id, video_note_id, document_id = db.get_lesson_info(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
+        lesson_name, text, voice_id, photo_id, video_id, video_note_id, document_id = await db.get_lesson_info(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
 
         keyboard = InlineKeyboardMarkup().add(
                 InlineKeyboardButton(
@@ -584,12 +584,12 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         course_id = int(callback.split("_")[1])
 
         if callback[:6] == "course":
-            name, description, image_id = db.get_course_info(course_id=course_id)
+            name, description, image_id = await db.get_course_info(course_id=course_id)
             keyboard = await generate_modules_keyboard(course_id=course_id, passing=True)
 
         else:
             module_id = int(callback.split("_")[2])
-            name, description, image_id = db.get_module_info(course_id=course_id, module_id=module_id)
+            name, description, image_id = await db.get_module_info(course_id=course_id, module_id=module_id)
             keyboard = await generate_lessons_keyboard(course_id=course_id, module_id=module_id, passing=True)
 
         await bot.delete_message(

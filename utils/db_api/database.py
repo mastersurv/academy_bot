@@ -417,7 +417,7 @@ class DataBase:
             course_id = random.randint(10000000, 99999999)  # Генерация восьмизначного числа
             # Проверка, есть ли уже такой course_id в базе
             existing_courses = await self.execute_query(
-                'SELECT course_id FROM courses WHERE course_id = %s', course_id
+                'SELECT course_id FROM courses WHERE course_id = ?', (course_id,)
             )
             if not existing_courses:
                 return course_id

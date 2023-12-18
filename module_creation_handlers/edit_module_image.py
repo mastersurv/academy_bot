@@ -56,7 +56,7 @@ async def edit_module_image(message: Message, state: FSMContext):
             await state.finish()
 
         else:
-            db.update_module_image(course_id=course_id, module_id=module_id, image_file_id=image_file_id)
+            await db.update_module_image(course_id=course_id, module_id=module_id, image_file_id=image_file_id)
 
             await bot.send_message(
                 chat_id=chat_id,

@@ -4,7 +4,7 @@ from utils.functions.get_bot_and_db import get_bot_and_db
 
 async def generate_lessons_keyboard(course_id: int, module_id: int, passing=None) -> InlineKeyboardMarkup:
     bot, db = get_bot_and_db()
-    lessons = db.get_module_lessons(course_id=course_id, module_id=module_id)
+    lessons = await db.get_module_lessons(course_id=course_id, module_id=module_id)
     keyboard = InlineKeyboardMarkup()
 
     for num, lessons_tuple in enumerate(lessons):

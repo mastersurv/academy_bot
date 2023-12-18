@@ -27,9 +27,9 @@ async def ask_question_handler(message: Message, state: FSMContext):
             chat_id=group_id,
             from_chat_id=tg_id,
             message_id=m_id,
-            reply_to_message_id=db.get_post_id(tg_id=tg_id)
+            reply_to_message_id=await db.get_post_id(tg_id=tg_id)
         )
-        db.add_user_message(tg_id=tg_id, message_id=message_to_chat.message_id)
+        await db.add_user_message(tg_id=tg_id, message_id=message_to_chat.message_id)
 
     except Exception as e:
         pass

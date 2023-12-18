@@ -52,7 +52,7 @@ async def edit_lesson_name(message: Message, state: FSMContext):
             await SettingsStates.lesson_material.set()
 
         else:
-            db.update_lesson_name(course_id=course_id, module_id=module_id, lesson_id=lesson_id, new_name=lesson_name)
+            await db.update_lesson_name(course_id=course_id, module_id=module_id, lesson_id=lesson_id, new_name=lesson_name)
 
             await bot.send_message(
                 chat_id=chat_id,

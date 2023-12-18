@@ -10,6 +10,7 @@ from blanks.bot_markup import back_to_settings
 async def edit_course_image(message: Message, state: FSMContext):
     bot, db = get_bot_and_db()
     chat_id = message.chat.id
+    tg_id = message.from_user.id
     m_id = message.message_id
     image_file_id = message.photo[-1]["file_id"]
 
@@ -29,10 +30,11 @@ async def edit_course_image(message: Message, state: FSMContext):
         if mode == "creation":
             course_name = data["course_name"]
             course_description = data["course_description"]
-            new_promocode = db.generate_unique_promocode(course_id=course_id)
+            new_promocode = await db.generate_unique_promocode(course_id=course_id)
 
             await db.add_course(
                 course_id=course_id,
+                owner_id=tg_id,
                 course_name=course_name,
                 course_description=course_description,
                 course_image_id=image_file_id,
@@ -57,7 +59,7 @@ async def edit_course_image(message: Message, state: FSMContext):
             await state.finish()
 
         else:
-            db.update_course_image(course_id=course_id, image_file_id=image_file_id)
+            await db.update_course_image(course_id=course_id, image_file_id=image_file_id)
 
             await bot.send_message(
                 chat_id=chat_id,

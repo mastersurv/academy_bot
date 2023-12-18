@@ -63,7 +63,7 @@ async def edit_lesson_material(message: Message, state: FSMContext):
             await state.finish()
 
         else:
-            db.update_lesson_material(
+            await db.update_lesson_material(
                 course_id=course_id,
                 module_id=module_id,
                 lesson_id=lesson_id,

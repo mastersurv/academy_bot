@@ -16,6 +16,10 @@ from course_creation_handlers.edit_course_name import edit_course_name
 from course_creation_handlers.edit_course_description import edit_course_description
 from course_creation_handlers.edit_course_image import edit_course_image
 
+from module_creation_handlers.edit_module_name import edit_module_name
+from module_creation_handlers.edit_module_description import edit_module_description
+from module_creation_handlers.edit_module_image import edit_module_image
+
 from config import channel_id, group_id
 
 
@@ -30,7 +34,7 @@ class MyBot:
         tg_id = message.from_user.id
         username = message.from_user.username
 
-        users = self.db.get_users_ids()
+        users = await self.db.get_users_ids()
         keyboard = menu
 
         creators_ids = await self.db.get_creators_ids()
@@ -49,7 +53,7 @@ class MyBot:
             reply_markup=keyboard
         )
 
-        if tg_id not in await users:
+        if tg_id not in users:
             try:
                 await self.dp.bot.send_message(
                     chat_id=channel_id, text=f"Чат с пользователем @{username}",
@@ -104,6 +108,13 @@ class MyBot:
         self.dp.register_message_handler(callback=edit_course_name, state=SettingsStates.course_name, content_types=["text"])
         self.dp.register_message_handler(callback=edit_course_description, state=SettingsStates.course_description, content_types=["text"])
         self.dp.register_message_handler(callback=edit_course_image, state=SettingsStates.course_image, content_types=["photo"])
+
+        self.dp.register_message_handler(callback=edit_module_name, state=SettingsStates.module_name,
+                                         content_types=["text"])
+        self.dp.register_message_handler(callback=edit_module_description, state=SettingsStates.module_description,
+                                         content_types=["text"])
+        self.dp.register_message_handler(callback=edit_module_image, state=SettingsStates.module_image,
+                                         content_types=["photo"])
 
         self.dp.register_message_handler(callback=self.text_handler, state="*", content_types=["photo"])
 
