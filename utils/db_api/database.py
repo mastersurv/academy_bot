@@ -84,7 +84,7 @@ class DataBase:
             CREATE TABLE IF NOT EXISTS modules (
                 module_id INT PRIMARY KEY,
                 course_id INT REFERENCES courses(course_id),
-                module_title TEXT,
+                module_name TEXT,
                 module_description TEXT,
                 module_image TEXT
             )
@@ -97,6 +97,7 @@ class DataBase:
                 course_id INT REFERENCES courses(course_id),
                 lesson_title TEXT,
                 lesson_description TEXT,
+                text TEXT,
                 audio TEXT,
                 photo TEXT,
                 video TEXT,
@@ -195,36 +196,36 @@ class DataBase:
                                          course_description, course_image_id, promocode))
 
     async def add_module(
-            self, module_id: int, course_id: int, module_title: str, module_description: str, module_image: str
+            self, module_id: int, course_id: int, module_name: str, module_description: str, module_image: str
     ):
         if self.conn is None:
             await self.connect()
 
         await self.execute_query("""
            INSERT OR REPLACE INTO modules
-           (module_id, course_id, module_title, module_description, module_image)
+           (module_id, course_id, module_name, module_description, module_image)
            VALUES
            (?, ?, ?, ?, ?)
-        """, (module_id, course_id, module_title, module_description, module_image))
+        """, (module_id, course_id, module_name, module_description, module_image))
 
     async def add_lesson(
-            self, lesson_id: int, module_id: int, course_id: int, lesson_title: str, lesson_description: str,
-            audio: str = None, photo: str = None, video: str = None,
-            video_note: str = None, document: str = None, document_name: str = None
+            self, lesson_id: int, module_id: int, course_id: int, lesson_title: str,
+            text: str = None, audio_id: str = None, photo_id: str = None, video_id: str = None,
+            video_note_id: str = None, document_id: str = None, document_name: str = None
     ):
         if self.conn is None:
             await self.connect()
 
         query = '''
-		        INSERT OR REPLACE INTO lessons (
-		            lesson_id, module_id, course_id, lesson_title, lesson_description,
-		            audio, photo, video, video_note, document, document_name
-		        )
-		        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		    '''
+            INSERT OR REPLACE INTO lessons (
+                lesson_id, module_id, course_id, lesson_title, text, 
+                audio, photo, video, video_note, document, document_name
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        '''
         await self.execute_query(query, (
-            lesson_id, module_id, course_id, lesson_title, lesson_description,
-            audio, photo, video, video_note, document, document_name
+            lesson_id, module_id, course_id, lesson_title, text,
+            audio_id, photo_id, video_id, video_note_id, document_id, document_name
         ))
 
     async def get_courses_ids(self, tg_id):
@@ -258,6 +259,23 @@ class DataBase:
         creator_ids = [row[0] for row in creators_ids]
 
         return creator_ids
+
+    async def get_module_name(self, course_id, module_id):
+        if self.conn is None:
+            await self.connect()
+
+        query = '''
+            SELECT module_name
+            FROM modules
+            WHERE course_id = ? AND module_id = ?
+        '''
+
+        result = await self.execute_query(query, (course_id, module_id))
+
+        if result:
+            return result[0][0]
+        else:
+            return None
 
     async def get_course_modules(self, course_id):
         query = '''
@@ -310,6 +328,15 @@ class DataBase:
 	            FROM courses
 	            WHERE course_id = ?
 	        '''
+        course_info = await self.execute_query(query, (course_id,))
+        return course_info[0][0] if course_info else None
+
+    async def get_course_description(self, course_id):
+        query = '''
+    	            SELECT course_description
+    	            FROM courses
+    	            WHERE course_id = ?
+    	        '''
         course_info = await self.execute_query(query, (course_id,))
         return course_info[0][0] if course_info else None
 
@@ -422,6 +449,20 @@ class DataBase:
             if not existing_courses:
                 return course_id
 
+    async def get_created_courses_ids(self, tg_id):
+        if self.conn is None:
+            await self.connect()
+
+        query = '''
+            SELECT course_id
+            FROM courses
+            WHERE owner_id = ?
+        '''
+
+        user_courses = await self.execute_query(query, (tg_id,))
+
+        return [course[0] for course in user_courses] if user_courses else []
+
     async def generate_unique_promocode(self, course_id):
         while True:
             # Генерация промокода из 8 случайных букв
@@ -446,7 +487,7 @@ class DataBase:
 
     async def get_module_info(self, course_id, module_id):
         query = '''
-	        SELECT module_title, module_description, module_image
+	        SELECT module_name, module_description, module_image
 	        FROM modules
 	        WHERE course_id = ? AND module_id = ?
 	    '''
@@ -580,3 +621,5 @@ class DataBase:
 
         # Выполняем запрос
         await self.execute_query(update_query, values)
+
+

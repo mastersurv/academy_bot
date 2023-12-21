@@ -27,7 +27,7 @@ async def edit_lesson_name(message: Message, state: FSMContext):
 
         keyboard = InlineKeyboardMarkup().add(
                     InlineKeyboardButton(
-                        text="К настройкам модуляй",
+                        text="К настройкам модулей",
                         callback_data=f"module_settings_{course_id}_{module_id}"
                     )
                 )

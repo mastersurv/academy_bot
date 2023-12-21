@@ -36,10 +36,11 @@ async def edit_course_description(message: Message, state: FSMContext):
 
         else:
             await db.update_course_description(course_id=course_id, new_description=course_description)
+            print(course_description)
 
             await bot.send_message(
                 chat_id=chat_id,
-                text=f"Новое описание курса: <br>{course_description}</br> успешно установлено",
+                text=f"Новое описание курса: <b>{course_description}</b> успешно установлено",
                 parse_mode="html",
                 reply_markup=back_to_settings
             )

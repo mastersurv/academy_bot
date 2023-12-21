@@ -2,7 +2,7 @@ from aiogram import Bot, Dispatcher, executor
 from aiogram.types import InlineKeyboardButton
 from utils.db_api.database import DataBase
 
-from aiogram.types import Message
+from aiogram.types import Message, ContentTypes
 from aiogram.dispatcher.dispatcher import FSMContext
 
 from blanks.bot_markup import menu, admin_menu
@@ -19,6 +19,10 @@ from course_creation_handlers.edit_course_image import edit_course_image
 from module_creation_handlers.edit_module_name import edit_module_name
 from module_creation_handlers.edit_module_description import edit_module_description
 from module_creation_handlers.edit_module_image import edit_module_image
+
+from lesson_creation_handlers.edit_lesson_name import edit_lesson_name
+from lesson_creation_handlers.edit_lesson_description import edit_lesson_description
+from lesson_creation_handlers.edit_lesson_material import edit_lesson_material
 
 from config import channel_id, group_id
 
@@ -115,6 +119,13 @@ class MyBot:
                                          content_types=["text"])
         self.dp.register_message_handler(callback=edit_module_image, state=SettingsStates.module_image,
                                          content_types=["photo"])
+
+        self.dp.register_message_handler(callback=edit_lesson_name, state=SettingsStates.lesson_name,
+                                         content_types=["text"])
+        self.dp.register_message_handler(callback=edit_lesson_description, state=SettingsStates.lesson_description,
+                                         content_types=["text"])
+        self.dp.register_message_handler(callback=edit_lesson_material, state=SettingsStates.lesson_material,
+                                         content_types=ContentTypes.ANY)
 
         self.dp.register_message_handler(callback=self.text_handler, state="*", content_types=["photo"])
 

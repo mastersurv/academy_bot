@@ -35,12 +35,12 @@ async def edit_module_image(message: Message, state: FSMContext):
                 module_id=module_id,
                 module_name=module_name,
                 module_description=module_description,
-                module_image_id=image_file_id,
+                module_image=image_file_id,
             )
 
             await bot.send_message(
                 chat_id=chat_id,
-                text=f"Вы успешно добавили модуль - {module_name}\nы",
+                text=f"Вы успешно добавили модуль - {module_name}\n",
                 reply_markup=InlineKeyboardMarkup().add(
                     InlineKeyboardButton(
                         text="Продолжить настройку модуля",

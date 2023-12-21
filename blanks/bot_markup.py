@@ -113,11 +113,6 @@ bot_settings_mp = (InlineKeyboardMarkup().add(
     )
 ).add(
     InlineKeyboardButton(
-        text="Настройки модулей",
-        callback_data="modules_settings"
-    )
-).add(
-    InlineKeyboardButton(
         text="Добавить модуль",
         callback_data="edit_module"
     )

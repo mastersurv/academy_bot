@@ -12,7 +12,7 @@ async def edit_lesson_material(message: Message, state: FSMContext):
     chat_id = message.chat.id
     m_id = message.message_id
 
-    text, audio_id, photo_id, video_id, video_note_id, document_id = files_ids(message=message, bot=bot)
+    text, audio_id, photo_id, video_id, video_note_id, document_id = await files_ids(message=message, bot=bot)
 
     try:
         await bot.edit_message_reply_markup(
@@ -36,7 +36,7 @@ async def edit_lesson_material(message: Message, state: FSMContext):
                 course_id=course_id,
                 module_id=module_id,
                 lesson_id=lesson_id,
-                lesson_name=lesson_name,
+                lesson_title=lesson_name,
                 text=text,
                 audio_id=audio_id,
                 photo_id=photo_id,
@@ -47,7 +47,7 @@ async def edit_lesson_material(message: Message, state: FSMContext):
 
             await bot.send_message(
                 chat_id=chat_id,
-                text=f"Вы успешно добавили урок - {lesson_name}\nы",
+                text=f"Вы успешно добавили урок - {lesson_name}\n",
                 reply_markup=InlineKeyboardMarkup().add(
                     InlineKeyboardButton(
                         text="Продолжить настройку урока",

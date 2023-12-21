@@ -37,4 +37,4 @@ async def files_ids(message, bot):
     elif message.text:
         text = message.html_text
 
-    return voice_id, photo_id, video_id, video_note_id, document_id
+    return text, voice_id, photo_id, video_id, video_note_id, document_id

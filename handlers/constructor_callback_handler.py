@@ -33,7 +33,7 @@ from blanks.bot_markup import (
 async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
     bot, db = get_bot_and_db()
     chat = call.message.chat.id
-    tg_id = call.message.from_user.id
+    tg_id = call.from_user.id
     callback = call.data
     m_id = call.message.message_id
 
@@ -174,17 +174,16 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         course_name = await db.get_course_name(course_id=course_id)
         text = f"Настройка вашего курса:\n<b>{course_name}</b>"
 
-        await bot.delete_message(
-            chat_id=chat,
-            message_id=m_id
-        )
-
-        await bot.send_message(
-            chat_id=chat,
-            text=text,
-            parse_mode="html",
-            reply_markup=keyboard
-        )
+        try:
+            await bot.edit_message_text(
+                chat_id=chat,
+                text=text,
+                parse_mode='html',
+                message_id=m_id,
+                reply_markup=keyboard
+            )
+        except:
+            pass
 
     elif callback[:17] == "check_demo_course":
         course_id = int(callback.split("_")[3])
@@ -307,6 +306,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             await bot.edit_message_text(
                 chat_id=chat,
                 text=text,
+                parse_mode='html',
                 message_id=m_id,
                 reply_markup=keyboard
             )
@@ -427,7 +427,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
     elif callback[:10] == "add_lesson":
         course_id = int(callback.split("_")[2])
         module_id = int(callback.split("_")[3])
-        new_lesson_id = await db.get_modules_numbers(course_id=course_id, module_id=module_id) + 1
+        new_lesson_id = await db.get_modules_numbers(course_id=course_id) + 1
 
         async with state.proxy() as data:
             data["course_id"] = course_id
@@ -440,6 +440,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
         try:
             await bot.edit_message_text(
+                chat_id=chat,
                 text=text,
                 message_id=m_id,
                 reply_markup=InlineKeyboardMarkup().add(
@@ -449,8 +450,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
                     )
                 )
             )
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
     elif callback[:20] == "edit_lesson_material":
         course_id = int(callback.split("_")[3])
@@ -581,13 +582,14 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         )
 
     elif callback[:6] in ["course", "module"]:
-        course_id = int(callback.split("_")[1])
+        course_id = int(callback.split("_")[2])
 
         if callback[:6] == "course":
             name, description, image_id = await db.get_course_info(course_id=course_id)
             keyboard = await generate_modules_keyboard(course_id=course_id, passing=True)
 
         else:
+            print(callback)
             module_id = int(callback.split("_")[2])
             name, description, image_id = await db.get_module_info(course_id=course_id, module_id=module_id)
             keyboard = await generate_lessons_keyboard(course_id=course_id, module_id=module_id, passing=True)
