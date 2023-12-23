@@ -45,14 +45,14 @@ class MyBot:
         if tg_id in creators_ids:
             keyboard = admin_menu
 
-        await self.bot.send_message(
-            chat_id=chat,
-            text="Добро пожаловать в нашего бота!",
-        )
+        # await self.bot.send_message(
+        #     chat_id=chat,
+        #     text="Добро пожаловать в нашего бота!",
+        # )
 
         await self.bot.send_message(
             chat_id=chat,
-            text="<b>Меню</b>",
+            text="Добро пожаловать в нашего бота!\n\n<b>Меню</b>",
             parse_mode="html",
             reply_markup=keyboard
         )

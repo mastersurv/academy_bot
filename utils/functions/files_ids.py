@@ -16,7 +16,7 @@ async def files_ids(message, bot):
         voice_id = message.voice[-1].file_id
 
     elif message.video:
-        video_id = message.video[-1].file_id
+        video_id = message.video.file_id
 
         if message.caption:
             text = message.html_text

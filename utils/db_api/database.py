@@ -288,7 +288,7 @@ class DataBase:
 
     async def get_module_lessons(self, course_id, module_id):
         query = '''
-	            SELECT lesson_id, lesson_name
+	            SELECT lesson_id, lesson_title
 	            FROM lessons
 	            WHERE course_id = ? AND module_id = ?
 	        '''
@@ -496,7 +496,7 @@ class DataBase:
 
     async def get_lesson_info(self, course_id, module_id, lesson_id):
         query = '''
-	        SELECT lesson_title, lesson_description, audio, photo, video, video_note, document, document_name
+	        SELECT lesson_title, text, audio, photo, video, video_note, document
 	        FROM lessons
 	        WHERE course_id = ? AND module_id = ? AND lesson_id = ?
 	    '''

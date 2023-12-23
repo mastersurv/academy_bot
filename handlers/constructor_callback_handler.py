@@ -36,6 +36,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
     tg_id = call.from_user.id
     callback = call.data
     m_id = call.message.message_id
+    print(callback)
 
     if callback == "menu":
         creators_ids = await db.get_creators_ids()
@@ -112,12 +113,12 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         course_number = await db.get_number_of_created_courses(tg_id=tg_id)
         subscription_data = await db.get_subscription_data()
         user_status = await db.get_subscription_status(tg_id=tg_id)
-
+        # TODO: Реализация с количеством курсов, которые может создать пользователь
         # text = f"Число курсов, которое вы можете создать: {subscription_data[user_status] - course_number}"
         try:
             await bot.edit_message_text(
                 chat_id=chat,
-                text="text",
+                text="Создайте новый курс или отредактируйте созданные:",
                 message_id=m_id,
                 reply_markup=course_creation
             )
@@ -146,8 +147,9 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         course_number = await db.get_number_of_created_courses(tg_id=tg_id)
         subscription_data = await db.get_subscription_data()
         user_status = await db.get_subscription_status(tg_id=tg_id)
-        user_status = 'active'
-        if subscription_data[user_status] - course_number > 0:
+        user_status = 'active'  # TODO: Реализация работы с проверкой подписки (статуса пользователя)
+        # if subscription_data[user_status] - course_number > 0:
+        if user_status:
             new_course_id = await db.generate_unique_course_id()
             async with state.proxy() as data:
                 data["course_id"] = new_course_id
@@ -427,7 +429,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
     elif callback[:10] == "add_lesson":
         course_id = int(callback.split("_")[2])
         module_id = int(callback.split("_")[3])
-        new_lesson_id = await db.get_modules_numbers(course_id=course_id) + 1
+        new_lesson_id = await db.get_lessons_numbers(course_id=course_id, module_id=module_id) + 1
 
         async with state.proxy() as data:
             data["course_id"] = course_id
@@ -544,11 +546,17 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             pass
 
     elif callback[:17] == "check_demo_lesson" or callback[:6] == "lesson":
-        course_id = int(callback.split("_")[3])
-        module_id = int(callback.split("_")[4])
-        lesson_id = int(callback.split("_")[5])
+        if callback[:6] == "lesson":
+            course_id = int(callback.split("_")[1])
+            module_id = int(callback.split("_")[2])
+            lesson_id = int(callback.split("_")[3])
+        elif callback[:17] == "check_demo_lesson":
+            course_id = int(callback.split("_")[3])
+            module_id = int(callback.split("_")[4])
+            lesson_id = int(callback.split("_")[5])
         lesson_name, text, voice_id, photo_id, video_id, video_note_id, document_id = await db.get_lesson_info(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
-
+        if not text:
+            text = ''
         keyboard = InlineKeyboardMarkup().add(
                 InlineKeyboardButton(
                     text="Назад",
@@ -582,14 +590,13 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         )
 
     elif callback[:6] in ["course", "module"]:
-        course_id = int(callback.split("_")[2])
+        course_id = int(callback.split("_")[1])
 
         if callback[:6] == "course":
             name, description, image_id = await db.get_course_info(course_id=course_id)
             keyboard = await generate_modules_keyboard(course_id=course_id, passing=True)
 
         else:
-            print(callback)
             module_id = int(callback.split("_")[2])
             name, description, image_id = await db.get_module_info(course_id=course_id, module_id=module_id)
             keyboard = await generate_lessons_keyboard(course_id=course_id, module_id=module_id, passing=True)

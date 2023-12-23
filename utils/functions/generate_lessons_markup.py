@@ -12,7 +12,7 @@ async def generate_lessons_keyboard(course_id: int, module_id: int, passing=None
         callback_data = f'lesson_{course_id}_{module_id}_{lesson_id}' if passing else f'lesson_settings_{course_id}_{module_id}_{lesson_id}'
         button = InlineKeyboardButton(text=f"{num + 1}. {lesson_name}", callback_data=callback_data)
         keyboard.add(button)
-    end_callback = f"module_{course_id}" if passing else f"module_settings_{course_id}_{course_id}"
+    end_callback = f"course_{course_id}" if passing else f"module_settings_{course_id}_{course_id}"
     keyboard.add(InlineKeyboardButton("Назад", callback_data=end_callback))
 
     return keyboard
