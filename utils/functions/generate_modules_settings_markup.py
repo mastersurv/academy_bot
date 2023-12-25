@@ -32,7 +32,7 @@ async def generate_modules_settings_keyboard(course_id: int, module_id: int) -> 
     ).add(
         InlineKeyboardButton(
             text="Настройки уроков",
-            callback_data=f"lessons_settings_{course_id}_{module_id}"
+            callback_data=f"created_lessons_{course_id}_{module_id}"
         )
     ).add(
         InlineKeyboardButton(

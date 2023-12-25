@@ -412,14 +412,16 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         module_id = int(callback.split("_")[3])
         lesson_id = int(callback.split("_")[4])
 
-        keyboard = await generate_lessons_settings_keyboard(course_id=course_id, module_id=module_id)
-        lesson_name = await db.get_lesson_name(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
+        keyboard = await generate_lessons_settings_keyboard(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
+        lesson_name = await db.get_lesson_info(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
+        lesson_name = lesson_name[0]
         text = f"Настройка вашего урока:\n<b>{lesson_name}</b>"
 
         try:
             await bot.edit_message_text(
                 chat_id=chat,
                 text=text,
+                parse_mode='html',
                 message_id=m_id,
                 reply_markup=keyboard
             )
@@ -547,8 +549,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
     elif callback[:17] == "check_demo_lesson" or callback[:6] == "lesson":
         if callback[:6] == "lesson":
-            course_id = int(callback.split("_")[1])
-            module_id = int(callback.split("_")[2])
+            course_id = int(callback.split("_")[2])
+            module_id = int(callback.split("_")[3])
             lesson_id = int(callback.split("_")[3])
         elif callback[:17] == "check_demo_lesson":
             course_id = int(callback.split("_")[3])
