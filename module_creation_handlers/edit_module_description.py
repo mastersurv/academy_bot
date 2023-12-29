@@ -51,7 +51,7 @@ async def edit_module_description(message: Message, state: FSMContext):
                 parse_mode="html",
                 reply_markup=InlineKeyboardMarkup().add(
                     InlineKeyboardButton(
-                        text="назад",
+                        text="Назад",
                         callback_data=f"module_settings_{course_id}_{module_id}"
                     )
                 )

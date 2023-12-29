@@ -282,15 +282,10 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
                 text=text,
                 parse_mode="html",
                 message_id=m_id,
-                reply_markup=created_modules_keyboard.add(
-                    InlineKeyboardButton(
-                        text="К настройке курса",
-                        callback_data=f"course_settings_{course_id}"
-                    )
-                )
+                reply_markup=created_modules_keyboard
             )
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
     elif callback[:15] == "module_settings":
         course_id = int(callback.split("_")[2])
@@ -301,15 +296,28 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         text = f"Настройка вашего модуля:\n<b>{module_name}</b>"
 
         try:
-            await bot.edit_message_text(
-                chat_id=chat,
-                text=text,
-                parse_mode='html',
-                message_id=m_id,
-                reply_markup=keyboard
-            )
-        except:
-            pass
+            if call.message.photo:
+                await bot.delete_message(
+                    chat_id=chat,
+                    message_id=m_id
+                )
+
+                await bot.send_message(
+                    chat_id=chat,
+                    text=text,
+                    parse_mode='html',
+                    reply_markup=keyboard
+                )
+            else:
+                await bot.edit_message_text(
+                    chat_id=chat,
+                    text=text,
+                    parse_mode='html',
+                    message_id=m_id,
+                    reply_markup=keyboard
+                )
+        except Exception as e:
+            print(e)
 
     elif callback[:11] == "edit_module":
         mode = callback.split("_")[2]
@@ -331,8 +339,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
                     )
                 )
             )
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
         text = "Текст"
         if mode == "name":
@@ -367,11 +375,13 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         )
 
         text = f"<b>{module_name}</b>\n\n{module_description}"
+        print('here')
 
         await bot.send_photo(
             chat_id=chat,
             photo=module_image,
             caption=text,
+            parse_mode='html',
             reply_markup=InlineKeyboardMarkup().add(
                 InlineKeyboardButton(
                     text="Назад",
