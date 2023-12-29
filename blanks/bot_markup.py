@@ -72,6 +72,11 @@ course_creation = InlineKeyboardMarkup().add(
         text="Создать курс",
         callback_data="create_course"
     )
+).add(
+    InlineKeyboardButton(
+        text="Назад",
+        callback_data="menu"
+    )
 )
 
 to_course_creation = InlineKeyboardMarkup().add(

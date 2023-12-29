@@ -19,6 +19,7 @@ from states_handlers.states import SettingsStates, MenuStates
 from blanks.bot_markup import (
     menu,
     to_menu,
+    admin_menu,
     course_creation,
     to_course_creation,
     bot_settings_mp,
@@ -41,12 +42,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
     if callback == "menu":
         creators_ids = await db.get_creators_ids()
         if tg_id in creators_ids:
-            menu.add(
-                InlineKeyboardButton(
-                    text="Создание курсов",
-                    callback_data="creation_courses"
-                ))
-
+            menu = admin_menu
         try:
             await bot.edit_message_text(
                 chat_id=chat,
@@ -78,7 +74,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
                 text="<b>Список ваших курсов:</b>",
                 parse_mode="html",
                 message_id=m_id,
-                reply_markup=keyboard.add(InlineKeyboardButton(text="Меню", callback_data="menu"))
+                reply_markup=keyboard
             )
 
     elif callback == "get_course":
