@@ -21,7 +21,12 @@ async def generate_lessons_settings_keyboard(course_id: int, module_id: int, les
         )
     ).add(
         InlineKeyboardButton(
-            text="Посмотреть демо урока (как будет выглядеть для пользователя)",
+            text="Добавить проверочное задание",
+            callback_data=f"add_homework_{course_id}_{module_id}_{lesson_id}"
+        )
+    ).add(
+        InlineKeyboardButton(
+            text="Посмотреть демо урока",
             callback_data=f"check_demo_lesson_{course_id}_{module_id}_{lesson_id}"
         )
     ).add(

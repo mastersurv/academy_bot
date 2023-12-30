@@ -553,6 +553,104 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         except:
             pass
 
+    elif callback[:12] == "add_homework":
+        course_id = int(callback.split("_")[2])
+        module_id = int(callback.split("_")[3])
+        lesson_id = int(callback.split("_")[4])
+
+        async with state.proxy() as data:
+            data["course_id"] = course_id
+            data["module_id"] = module_id
+            data["lesson_id"] = lesson_id
+
+        await bot.edit_message_text(
+            chat_id=chat,
+            message_id=m_id,
+            text="Введите вопрос для тестового задания",
+            reply_markup=InlineKeyboardMarkup().add(
+                InlineKeyboardButton(
+                    text="К настройкам курса",
+                    callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
+                )
+            )
+        )
+
+        await SettingsStates.test_question.set()
+
+    elif callback[:13] == "choose_answer":
+        right_answer = int(callback.split("_")[2])
+        course_id = int(callback.split("_")[3])
+        module_id = int(callback.split("_")[4])
+        lesson_id = int(callback.split("_")[5])
+
+        await bot.edit_message_reply_markup(
+            chat_id=chat,
+            message_id=m_id,
+            reply_markup=InlineKeyboardMarkup()
+        )
+
+        async with state.proxy() as data:
+            test_question = data["test_question"]
+            test_keyboard = data["test_keyboard"]
+
+        new_test_id = await db.get_test_numbers(course_id=course_id, module_id=module_id, lesson_id=lesson_id) + 1
+        await db.add_test_question(course_id=course_id, module_id=module_id, lesson_id=lesson_id, test_id=new_test_id, test_question=test_question, right_answer=right_answer)
+        for num, answer in enumerate(test_keyboard):
+            await db.add_test_answer(course_id=course_id, module_id=module_id, lesson_id=lesson_id, test_id=new_test_id, answer_num=num, answer=answer)
+
+        await bot.send_message(
+            chat_id=chat,
+            text=f"На вопрос: <b>{test_question}</b>\n"
+                 f"Выбран ответ: <b>{test_keyboard[right_answer]}</b>",
+            parse_mode="html",
+            reply_markup=InlineKeyboardMarkup().add(
+                InlineKeyboardButton(
+                    text="Тест добавлен (к настройкам)",
+                    callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
+                )
+            ).add(
+                InlineKeyboardButton(
+                    text="Изменить ответ",
+                    callback_data=f"edit_test_answer_{new_test_id}_{course_id}_{module_id}_{lesson_id}"
+                )
+            ).add(
+                InlineKeyboardButton(
+                    text="Добавить новый тест",
+                    callback_data=f"add_homework_{course_id}_{module_id}_{lesson_id}"
+                )
+            )
+        )
+
+    elif callback[:16] == "edit_test_answer":
+        test_id = int(callback.split("_")[3])
+        course_id = int(callback.split("_")[4])
+        module_id = int(callback.split("_")[5])
+        lesson_id = int(callback.split("_")[6])
+
+        await db.delete_test_question(course_id=course_id, module_id=module_id, lesson_id=lesson_id, test_id=test_id)
+        await db.delete_test_answer(course_id=course_id, module_id=module_id, lesson_id=lesson_id, test_id=test_id)
+
+        async with state.proxy() as data:
+            test_question = data["test_question"]
+            test_keyboard = data["test_keyboard"]
+
+        keyboard = InlineKeyboardMarkup()
+        for num, elem in enumerate(test_keyboard):
+            keyboard.add(
+                InlineKeyboardButton(
+                    text=elem,
+                    callback_data=f"choose_answer_{num}_{course_id}_{module_id}_{lesson_id}"
+                )
+            )
+
+        await bot.edit_message_text(
+            chat_id=chat,
+            message_id=m_id,
+            text=f"Выберите ВЕРНЫЙ вариант ответа.\n<b>{test_question}</b>",
+            parse_mode="html",
+            reply_markup=keyboard
+        )
+
     elif callback[:17] == "check_demo_lesson" or callback[:6] == "lesson":
         if callback[:6] == "lesson":
             course_id = int(callback.split("_")[2])

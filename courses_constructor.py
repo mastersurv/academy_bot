@@ -23,6 +23,8 @@ from module_creation_handlers.edit_module_image import edit_module_image
 from lesson_creation_handlers.edit_lesson_name import edit_lesson_name
 from lesson_creation_handlers.edit_lesson_description import edit_lesson_description
 from lesson_creation_handlers.edit_lesson_material import edit_lesson_material
+from lesson_creation_handlers.test_question_handler import test_question_handler
+from lesson_creation_handlers.test_keyboard_handler import test_keyboard_handler
 
 from config import channel_id, group_id
 
@@ -126,7 +128,10 @@ class MyBot:
                                          content_types=["text"])
         self.dp.register_message_handler(callback=edit_lesson_material, state=SettingsStates.lesson_material,
                                          content_types=ContentTypes.ANY)
-
+        self.dp.register_message_handler(callback=test_question_handler, state=SettingsStates.test_question,
+                                         content_types=["text"])
+        self.dp.register_message_handler(callback=test_keyboard_handler, state=SettingsStates.test_keyboard,
+                                         content_types=["text"])
         self.dp.register_message_handler(callback=self.text_handler, state="*", content_types=["photo"])
 
     def run(self):

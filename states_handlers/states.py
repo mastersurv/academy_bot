@@ -21,3 +21,6 @@ class SettingsStates(StatesGroup):
     lesson_name = State()
     lesson_description = State()
     lesson_material = State()
+
+    test_question = State()
+    test_keyboard = State()
