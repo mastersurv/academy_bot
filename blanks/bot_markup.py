@@ -163,7 +163,6 @@ lessons_settings_mp = InlineKeyboardMarkup().add(
     )
 )
 
-
 back_to_settings = InlineKeyboardMarkup().add(
     InlineKeyboardButton(
         text="Назад",
