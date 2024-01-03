@@ -598,6 +598,11 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         for num, answer in enumerate(test_keyboard):
             await db.add_test_answer(course_id=course_id, module_id=module_id, lesson_id=lesson_id, test_id=new_test_id, answer_num=num, answer=answer)
 
+        await bot.delete_message(
+            chat_id=chat,
+            message_id=m_id
+        )
+
         await bot.send_message(
             chat_id=chat,
             text=f"На вопрос: <b>{test_question}</b>\n"

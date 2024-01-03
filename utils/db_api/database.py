@@ -107,6 +107,30 @@ class DataBase:
             )
         ''')
 
+        await self.execute_query('''
+            CREATE TABLE IF NOT EXISTS test_questions (
+                course_id INT REFERENCES courses(course_id),
+                module_id INT REFERENCES modules(module_id),
+                lesson_id INT REFERENCES lessons(lesson_id),
+                test_id INT PRIMARY KEY,
+                test_question TEXT,
+                right_answer TEXT
+            )
+        ''')
+
+        await self.execute_query('''
+            CREATE TABLE IF NOT EXISTS test_answers (
+                course_id INT,
+                module_id INT,
+                lesson_id INT,
+                test_id INT,
+                answer_num INT,
+                answer TEXT,
+                PRIMARY KEY (course_id, module_id, lesson_id, test_id, answer_num),
+                FOREIGN KEY (course_id, module_id, lesson_id, test_id) REFERENCES test_questions(course_id, module_id, lesson_id, test_id)
+            )
+        ''')
+
     async def add_user_post(self, tg_id: int, post_id: int) -> None:
         if self.conn is None:
             await self.connect()
@@ -227,6 +251,32 @@ class DataBase:
             lesson_id, module_id, course_id, lesson_title, text,
             audio_id, photo_id, video_id, video_note_id, document_id, document_name
         ))
+
+    async def add_test_answer(self, course_id, module_id, lesson_id, test_id, answer_num, answer):
+        if self.conn is None:
+            await self.connect()
+
+        query = '''
+            INSERT INTO test_answers (course_id, module_id, lesson_id, test_id, answer_num, answer)
+            VALUES (?, ?, ?, ?, ?, ?)
+        '''
+        await self.execute_query(query, (course_id, module_id, lesson_id, test_id, answer_num, answer))
+
+    async def delete_test_question(self, course_id, module_id, lesson_id, test_id):
+        if self.conn is None:
+            await self.connect()
+
+        # Удаляем тестовые ответы, связанные с вопросом
+        await self.execute_query('''
+            DELETE FROM test_answers
+            WHERE course_id = ? AND module_id = ? AND lesson_id = ? AND test_id = ?
+        ''', (course_id, module_id, lesson_id, test_id))
+
+        # Удаляем сам тестовый вопрос
+        await self.execute_query('''
+            DELETE FROM test_questions
+            WHERE course_id = ? AND module_id = ? AND lesson_id = ? AND test_id = ?
+        ''', (course_id, module_id, lesson_id, test_id))
 
     async def get_courses_ids(self, tg_id):
         if self.conn is None:
@@ -415,6 +465,30 @@ class DataBase:
 	        VALUES (?, ?)
 	    '''
         await self.execute_query(query, (promocode, course_id))
+
+    async def add_test_question(self, course_id, module_id, lesson_id, test_id, test_question, right_answer):
+        if self.conn is None:
+            await self.connect()
+
+        query = '''
+            INSERT OR REPLACE INTO test_questions (
+                course_id, module_id, lesson_id, test_id, test_question, right_answer
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+        '''
+        await self.execute_query(query, (course_id, module_id, lesson_id, test_id, test_question, right_answer))
+
+    async def get_test_numbers(self, course_id, module_id, lesson_id):
+        if self.conn is None:
+            await self.connect()
+
+        query = '''
+            SELECT COUNT(*) FROM test_questions
+            WHERE course_id = ? AND module_id = ? AND lesson_id = ?
+        '''
+        result = await self.execute_query(query, (course_id, module_id, lesson_id))
+
+        return result[0][0] + 1 if result else 1
 
     async def get_subscription_status(self, tg_id):
         if self.conn is None:
@@ -622,4 +696,37 @@ class DataBase:
         # Выполняем запрос
         await self.execute_query(update_query, values)
 
+    async def get_test_question(self, course_id, module_id, lesson_id, test_id):
+        if self.conn is None:
+            await self.connect()
 
+        # Получаем информацию о тестовом вопросе и номере правильного ответа
+        result = await self.execute_query('''
+            SELECT test_question, right_answer
+            FROM test_questions
+            WHERE course_id = ? AND module_id = ? AND lesson_id = ? AND test_id = ?
+        ''', (course_id, module_id, lesson_id, test_id))
+
+        if result:
+            test_question, right_answer = result[0]
+            return test_question, right_answer
+        else:
+            return None, None
+
+    async def get_test_answer(self, course_id, module_id, lesson_id, test_id):
+        if self.conn is None:
+            await self.connect()
+
+        # Получаем информацию о тестовом ответе
+        result = await self.execute_query('''
+            SELECT test_id, answer
+            FROM test_answers
+            WHERE course_id = ? AND module_id = ? AND lesson_id = ? AND test_id = ?
+        ''', (course_id, module_id, lesson_id, test_id))
+
+        if not result:
+            return None, None
+
+        test_id, answer = result[0]
+
+        return test_id, answer
