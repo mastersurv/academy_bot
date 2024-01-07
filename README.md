@@ -1,2 +1,2 @@
-# aiogram_bot_template
-aiogram==2.13.1
+# Course Constructor
+aiogram==2.23.1

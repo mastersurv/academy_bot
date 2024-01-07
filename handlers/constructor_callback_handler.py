@@ -12,6 +12,7 @@ from utils.functions.generate_created_courses_markup import generate_created_cou
 from utils.functions.generate_course_settings_markup import generate_courses_settings_keyboard
 from utils.functions.generate_modules_settings_markup import generate_modules_settings_keyboard
 from utils.functions.generate_lessons_settings_markup import generate_lessons_settings_keyboard
+from utils.functions.generate_multi_markup import generate_multi_keyboard
 
 from utils.functions.send_lesson import send_lesson
 
@@ -665,9 +666,11 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             course_id = int(callback.split("_")[3])
             module_id = int(callback.split("_")[4])
             lesson_id = int(callback.split("_")[5])
+
         lesson_name, text, voice_id, photo_id, video_id, video_note_id, document_id = await db.get_lesson_info(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
         if not text:
             text = ''
+
         keyboard = InlineKeyboardMarkup().add(
                 InlineKeyboardButton(
                     text="Назад",
@@ -676,12 +679,14 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             )
 
         if callback[:6] == "lesson":
-            keyboard = InlineKeyboardMarkup().add(
-                InlineKeyboardButton(
-                    text="Назад",
-                    callback_data=f"module_{course_id}_{module_id}"
-                )
-            )
+            keyboard = generate_multi_keyboard(course_id=course_id, module_id=module_id, lesson_id=lesson_id, test_id=None)  # TODO func
+            # keyboard = InlineKeyboardMarkup().add(
+            #     InlineKeyboardButton(
+            #         text="Назад",
+            #         callback_data=f"module_{course_id}_{module_id}"
+            #     )
+            # )
+
         await bot.delete_message(
             chat_id=chat,
             message_id=m_id
@@ -724,3 +729,104 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             photo=image_id,
             reply_markup=keyboard
         )
+
+    elif callback[:4] == "test":
+        course_id = int(callback.split("_")[1])
+        module_id = int(callback.split("_")[2])
+        lesson_id = int(callback.split("_")[3])
+        test_id = int(callback.split("_")[4])
+
+        test_question, right_answer = await db.get_test_question(course_id=course_id, module_id=module_id,
+                                                                 lesson_id=lesson_id, test_id=test_id)
+        test_answers_list = await db.get_test_answers(course_id=course_id, module_id=module_id, lesson_id=lesson_id,
+                                                      test_id=test_id)
+
+        keyboard = InlineKeyboardMarkup()
+        for elem in test_answers_list:
+            answer_text, answer_id = elem
+            keyboard.add(
+                InlineKeyboardButton(
+                    text=answer_text,
+                    callback_data=f"answer_{course_id}_{module_id}_{lesson_id}_{test_id}_{answer_id}"
+                )
+            )
+
+        keyboard.add(
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=f"lesson_{course_id}_{module_id}_{lesson_id}"
+            )
+        )
+
+        await bot.send_message(
+            chat_id=chat,
+            text=test_question,
+            reply_markup=keyboard
+        )
+
+    elif callback[:6] == "answer":
+        course_id = int(callback.split("_")[1])
+        module_id = int(callback.split("_")[2])
+        lesson_id = int(callback.split("_")[3])
+        test_id = int(callback.split("_")[4])
+        answer_id = int(callback.split("_")[5])
+
+        test_question, right_answer = await db.get_test_question(course_id=course_id, module_id=module_id,
+                                                                 lesson_id=lesson_id, test_id=test_id)
+        test_answer_id, test_answer_text = await db.get_test_answer(course_id=course_id, module_id=module_id,
+                                                                    lesson_id=lesson_id, test_id=test_id)
+
+        l_text = list()
+        l_data = list()
+        cd = call.message.reply_markup.inline_keyboard
+        is_right = False
+
+        for elem in cd:
+            text = elem[0]
+
+            if text == test_question:
+                for l_el in cd:
+                    for el in l_el:
+
+                        text = el["text"]
+                        callback_data = el["callback_data"]
+                        # print(data, "DATA")
+                        if callback_data.split("_")[5] == right_answer:
+                            text = "✓ " + text
+                            is_right = True
+
+                        else:
+                            text = "крестик " + text
+
+                        l_data.append(callback_data)
+                        l_text.append(text)
+
+                # print(l_text, l_data)
+                next_text, next_button = generate_multi_keyboard(course_id=course_id, module_id=module_id,
+                                                                 lesson_id=lesson_id, test_id=test_id, answer=True)
+
+                i_mp = InlineKeyboardMarkup()
+                count = 0
+                for text, ca in zip(l_text, l_data):
+                    if is_right and len(l_data) - count - 1 == 0:
+                        i_mp.add(
+                            InlineKeyboardButton(
+                                text=next_text,
+                                callback_data=next_button
+                            )
+                        )
+                    else:
+                        i_mp.add(
+                            InlineKeyboardButton(
+                                text=text,
+                                callback_data=ca
+                            )
+                        )
+
+                    count += 1
+
+                await bot.edit_message_reply_markup(
+                    chat_id=chat,
+                    message_id=m_id,
+                    reply_markup=i_mp
+                )
