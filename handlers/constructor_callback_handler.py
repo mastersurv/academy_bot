@@ -658,8 +658,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
     elif callback[:17] == "check_demo_lesson" or callback[:6] == "lesson":
         if callback[:6] == "lesson":
-            course_id = int(callback.split("_")[2])
-            module_id = int(callback.split("_")[3])
+            course_id = int(callback.split("_")[1])
+            module_id = int(callback.split("_")[2])
             lesson_id = int(callback.split("_")[3])
         elif callback[:17] == "check_demo_lesson":
             course_id = int(callback.split("_")[3])

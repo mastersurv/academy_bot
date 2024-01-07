@@ -575,6 +575,7 @@ class DataBase:
 	        WHERE course_id = ? AND module_id = ? AND lesson_id = ?
 	    '''
         result = await self.execute_query(query, (course_id, module_id, lesson_id))
+        print(result)
         return result[0] if result else None
 
     async def get_modules_numbers(self, course_id):
@@ -730,3 +731,45 @@ class DataBase:
         test_id, answer = result[0]
 
         return test_id, answer
+
+    async def check_next_lesson(self, course_id, module_id, lesson_id):
+        query = '''
+            SELECT 1
+            FROM lessons
+            WHERE course_id = ? AND module_id = ? AND lesson_id > ?
+            LIMIT 1
+        '''
+        result = await self.execute_query(query, (course_id, module_id, lesson_id))
+        return bool(result)
+
+    async def check_next_module(self, course_id, module_id):
+        query = '''
+            SELECT 1
+            FROM modules
+            WHERE course_id = ? AND module_id > ?
+            LIMIT 1
+        '''
+        result = await self.execute_query(query, (course_id, module_id))
+        return bool(result)
+
+    async def get_next_lesson_in_module(self, course_id, module_id, lesson_id):
+        query = '''
+            SELECT lesson_id
+            FROM lessons
+            WHERE course_id = ? AND module_id = ? AND lesson_id > ?
+            ORDER BY lesson_id
+            LIMIT 1
+        '''
+        result = await self.execute_query(query, (course_id, module_id, lesson_id))
+        return result[0][0] if result else None
+
+    async def get_next_module(self, course_id, module_id):
+        query = '''
+            SELECT module_id
+            FROM modules
+            WHERE course_id = ? AND module_id > ?
+            ORDER BY module_id
+            LIMIT 1
+        '''
+        result = await self.execute_query(query, (course_id, module_id))
+        return result[0][0] if result else None
