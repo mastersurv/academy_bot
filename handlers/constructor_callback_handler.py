@@ -679,7 +679,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             )
 
         if callback[:6] == "lesson":
-            keyboard = generate_multi_keyboard(course_id=course_id, module_id=module_id, lesson_id=lesson_id, test_id=None)  # TODO func
+            keyboard = await generate_multi_keyboard(course_id=course_id, module_id=module_id, lesson_id=lesson_id, test_id=None)  # TODO func
             # keyboard = InlineKeyboardMarkup().add(
             #     InlineKeyboardButton(
             #         text="Назад",
@@ -735,7 +735,6 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         module_id = int(callback.split("_")[2])
         lesson_id = int(callback.split("_")[3])
         test_id = int(callback.split("_")[4])
-
         test_question, right_answer = await db.get_test_question(course_id=course_id, module_id=module_id,
                                                                  lesson_id=lesson_id, test_id=test_id)
         test_answers_list = await db.get_test_answers(course_id=course_id, module_id=module_id, lesson_id=lesson_id,
@@ -743,7 +742,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
         keyboard = InlineKeyboardMarkup()
         for elem in test_answers_list:
-            answer_text, answer_id = elem
+            answer_id, answer_text = elem
             keyboard.add(
                 InlineKeyboardButton(
                     text=answer_text,
@@ -756,6 +755,11 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
                 text="Назад",
                 callback_data=f"lesson_{course_id}_{module_id}_{lesson_id}"
             )
+        )
+
+        await bot.delete_message(
+	        chat_id=chat,
+	        message_id=m_id
         )
 
         await bot.send_message(
@@ -773,7 +777,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
         test_question, right_answer = await db.get_test_question(course_id=course_id, module_id=module_id,
                                                                  lesson_id=lesson_id, test_id=test_id)
-        test_answer_id, test_answer_text = await db.get_test_answer(course_id=course_id, module_id=module_id,
+        test_answer_id, test_answer_text = await db.get_test_answers(course_id=course_id, module_id=module_id,
                                                                     lesson_id=lesson_id, test_id=test_id)
 
         l_text = list()
@@ -802,7 +806,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
                         l_text.append(text)
 
                 # print(l_text, l_data)
-                next_text, next_button = generate_multi_keyboard(course_id=course_id, module_id=module_id,
+                next_text, next_button = await generate_multi_keyboard(course_id=course_id, module_id=module_id,
                                                                  lesson_id=lesson_id, test_id=test_id, answer=True)
 
                 i_mp = InlineKeyboardMarkup()

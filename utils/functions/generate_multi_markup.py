@@ -1,5 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from get_bot_and_db import get_bot_and_db
+from utils.functions.get_bot_and_db import get_bot_and_db
 
 
 async def generate_multi_keyboard(course_id=None, module_id=None, lesson_id=None, test_id=None, answer=None):
@@ -38,20 +38,21 @@ async def generate_multi_keyboard(course_id=None, module_id=None, lesson_id=None
 			)
 		)
 
-	elif lesson_id is not None:
+	if lesson_id is not None:
 		# Клавиатура для урока
 		has_next_lesson = await db.check_next_lesson(course_id, module_id, lesson_id)
 		has_next_module = await db.check_next_module(course_id, module_id)
-
+		test_id = await db.get_test_id_in_lesson(course_id, module_id, lesson_id)
 		if has_next_lesson:
 			next_lesson_id = await db.get_next_lesson_in_module(course_id, module_id, lesson_id)
 			if next_lesson_id:
 				keyboard.add(
 					InlineKeyboardButton(
-						text="Следующий урок",
+					text="Следующий урок",
 						callback_data=f"lesson_{module_id}_{next_lesson_id}"
 					)
 				)
+
 		elif has_next_module:
 			next_module_id = await db.get_next_module(course_id, module_id)
 			if next_module_id:
@@ -61,6 +62,15 @@ async def generate_multi_keyboard(course_id=None, module_id=None, lesson_id=None
 						callback_data=f"module_{course_id}_{next_module_id}"
 					)
 				)
+
+		if test_id:
+			keyboard.add(
+				InlineKeyboardButton(
+					text="Приступить к заданию",
+					callback_data=f"test_{course_id}_{module_id}_{lesson_id}_{test_id}"
+				)
+			)
+
 		keyboard.add(
 			InlineKeyboardButton(
 				text="Назад",

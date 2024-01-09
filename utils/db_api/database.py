@@ -5,40 +5,40 @@ import string
 
 
 class DataBase:
-    def __init__(self, db_name):
-        self.db_name = db_name
-        self.conn = None
+	def __init__(self, db_name):
+		self.db_name = db_name
+		self.conn = None
 
-    async def connect(self):
-        self.conn = await aiosqlite.connect(self.db_name)
+	async def connect(self):
+		self.conn = await aiosqlite.connect(self.db_name)
 
-    async def disconnect(self):
-        if self.conn:
-            await self.conn.close()
+	async def disconnect(self):
+		if self.conn:
+			await self.conn.close()
 
-    async def execute_query(self, query, *args):
-        if self.conn is None:
-            await self.connect()
-        async with self.conn.cursor() as cursor:
-            await cursor.execute(query, *args)
-            result = await cursor.fetchall()
-        await self.conn.commit()
-        return result
+	async def execute_query(self, query, *args):
+		if self.conn is None:
+			await self.connect()
+		async with self.conn.cursor() as cursor:
+			await cursor.execute(query, *args)
+			result = await cursor.fetchall()
+		await self.conn.commit()
+		return result
 
-    async def create_tables(self):
-        if self.conn is None:
-            await self.connect()
+	async def create_tables(self):
+		if self.conn is None:
+			await self.connect()
 
-        # Создание таблиц для SQLite
+		# Создание таблиц для SQLite
 
-        await self.execute_query('''
+		await self.execute_query('''
             CREATE TABLE IF NOT EXISTS users(
                 tg_id INTEGER PRIMARY KEY,
                 full_name TEXT
             )
         ''')
 
-        await self.execute_query('''
+		await self.execute_query('''
 		    CREATE TABLE IF NOT EXISTS subscription(
 				  sub_id INTEGER,
 				  tg_id int REFERENCES users(tg_id),
@@ -47,14 +47,14 @@ class DataBase:
 				)
 		        ''')
 
-        await self.execute_query('''
+		await self.execute_query('''
 		            CREATE TABLE IF NOT EXISTS user_courses(
 		                tg_id int REFERENCES users(tg_id),
 		                course_id INT REFERENCES courses(course_id)
 		            )
 		        ''')
 
-        await self.execute_query('''
+		await self.execute_query('''
             CREATE TABLE IF NOT EXISTS users_posts(
                 tg_id INTEGER PRIMARY KEY,
                 post_id INTEGER,
@@ -62,14 +62,14 @@ class DataBase:
             )
         ''')
 
-        await self.execute_query('''
+		await self.execute_query('''
 		    CREATE TABLE IF NOT EXISTS promocodes (
 		            promocode TEXT PRIMARY KEY,
 					course_id INT REFERENCES courses(course_id)
 		        )
 		    ''')
 
-        await self.execute_query('''
+		await self.execute_query('''
 		    CREATE TABLE IF NOT EXISTS courses (
 		        course_id INTEGER PRIMARY KEY,
 		        owner_id INTEGER REFERENCES users(tg_id),
@@ -80,7 +80,7 @@ class DataBase:
 		    )
 		''')
 
-        await self.execute_query('''
+		await self.execute_query('''
             CREATE TABLE IF NOT EXISTS modules (
                 module_id INT PRIMARY KEY,
                 course_id INT REFERENCES courses(course_id),
@@ -90,7 +90,7 @@ class DataBase:
             )
         ''')
 
-        await self.execute_query('''
+		await self.execute_query('''
             CREATE TABLE IF NOT EXISTS lessons (
                 lesson_id INT PRIMARY KEY,
                 module_id INT REFERENCES modules(module_id),
@@ -107,7 +107,7 @@ class DataBase:
             )
         ''')
 
-        await self.execute_query('''
+		await self.execute_query('''
             CREATE TABLE IF NOT EXISTS test_questions (
                 course_id INT REFERENCES courses(course_id),
                 module_id INT REFERENCES modules(module_id),
@@ -118,7 +118,7 @@ class DataBase:
             )
         ''')
 
-        await self.execute_query('''
+		await self.execute_query('''
             CREATE TABLE IF NOT EXISTS test_answers (
                 course_id INT,
                 module_id INT,
@@ -131,284 +131,284 @@ class DataBase:
             )
         ''')
 
-    async def add_user_post(self, tg_id: int, post_id: int) -> None:
-        if self.conn is None:
-            await self.connect()
+	async def add_user_post(self, tg_id: int, post_id: int) -> None:
+		if self.conn is None:
+			await self.connect()
 
-        await self.execute_query(
-            """
+		await self.execute_query(
+			"""
 			INSERT OR REPLACE INTO users_posts
 			VALUES(?, ?, ?)
 			""",
-            (tg_id, post_id, 0)
-        )
+			(tg_id, post_id, 0)
+		)
 
-    async def get_post_id(self, tg_id: int) -> int:
-        if self.conn is None:
-            await self.connect()
+	async def get_post_id(self, tg_id: int) -> int:
+		if self.conn is None:
+			await self.connect()
 
-        post_id_data = await self.execute_query(
-            """
+		post_id_data = await self.execute_query(
+			"""
 			SELECT post_id FROM users_posts
 			WHERE tg_id=?
 			""",
-            (tg_id,)
-        )
+			(tg_id,)
+		)
 
-        if post_id_data:
-            return post_id_data[0][0]
+		if post_id_data:
+			return post_id_data[0][0]
 
-    # Остальные методы аналогичны
-    async def get_message_or_user(self, tg_id=None, message_id=None, id=None, message=None) -> int:
-        if self.conn is None:
-            await self.connect()
+	# Остальные методы аналогичны
+	async def get_message_or_user(self, tg_id=None, message_id=None, id=None, message=None) -> int:
+		if self.conn is None:
+			await self.connect()
 
-        if message:
-            message_id_data = await self.execute_query(
-                """
+		if message:
+			message_id_data = await self.execute_query(
+				"""
 				SELECT message_id FROM users_posts
 				WHERE tg_id=?
 				""",
-                (tg_id,)
-            )
-            if message_id_data:
-                return message_id_data[0][0]
+				(tg_id,)
+			)
+			if message_id_data:
+				return message_id_data[0][0]
 
-        elif id:
-            tg_id_data = await self.execute_query(
-                """
+		elif id:
+			tg_id_data = await self.execute_query(
+				"""
 				SELECT tg_id FROM users_posts
 				WHERE message_id=?
 				""",
-                (message_id,)
-            )
-            if tg_id_data:
-                return tg_id_data[0][0]
+				(message_id,)
+			)
+			if tg_id_data:
+				return tg_id_data[0][0]
 
-    async def add_user_message(self, tg_id: int, message_id: int) -> None:
-        if self.conn is None:
-            await self.connect()
+	async def add_user_message(self, tg_id: int, message_id: int) -> None:
+		if self.conn is None:
+			await self.connect()
 
-        await self.execute_query(
-            """
+		await self.execute_query(
+			"""
 			INSERT OR REPLACE INTO users_messages
 			VALUES(?, ?)
 			""",
-            (tg_id, message_id)
-        )
+			(tg_id, message_id)
+		)
 
-    async def add_bot(self, bot_token: str, tg_id: int):
-        if self.conn is None:
-            await self.connect()
+	async def add_bot(self, bot_token: str, tg_id: int):
+		if self.conn is None:
+			await self.connect()
 
-        await self.execute_query("""
+		await self.execute_query("""
             INSERT OR REPLACE INTO bots
             (bot_token, tg_id)
             VALUES
             (?, ?)
         """, (bot_token, tg_id))
 
-    async def add_course(self, course_id: int, owner_id: int, course_name: str, course_description: str,
-                         course_image_id: int,
-                         promocode: str):
-        query = '''
+	async def add_course(self, course_id: int, owner_id: int, course_name: str, course_description: str,
+	                     course_image_id: int,
+	                     promocode: str):
+		query = '''
 	            INSERT OR REPLACE INTO courses (course_id, owner_id, course_name, 
 	            course_description, course_image_id, promocode)
 	            VALUES (?, ?, ?, ?, ?, ?)
 	        '''
-        await self.execute_query(query, (course_id, owner_id, course_name,
-                                         course_description, course_image_id, promocode))
+		await self.execute_query(query, (course_id, owner_id, course_name,
+		                                 course_description, course_image_id, promocode))
 
-    async def add_module(
-            self, module_id: int, course_id: int, module_name: str, module_description: str, module_image: str
-    ):
-        if self.conn is None:
-            await self.connect()
+	async def add_module(
+			self, module_id: int, course_id: int, module_name: str, module_description: str, module_image: str
+	):
+		if self.conn is None:
+			await self.connect()
 
-        await self.execute_query("""
+		await self.execute_query("""
            INSERT OR REPLACE INTO modules
            (module_id, course_id, module_name, module_description, module_image)
            VALUES
            (?, ?, ?, ?, ?)
         """, (module_id, course_id, module_name, module_description, module_image))
 
-    async def add_lesson(
-            self, lesson_id: int, module_id: int, course_id: int, lesson_title: str,
-            text: str = None, audio_id: str = None, photo_id: str = None, video_id: str = None,
-            video_note_id: str = None, document_id: str = None, document_name: str = None
-    ):
-        if self.conn is None:
-            await self.connect()
+	async def add_lesson(
+			self, lesson_id: int, module_id: int, course_id: int, lesson_title: str,
+			text: str = None, audio_id: str = None, photo_id: str = None, video_id: str = None,
+			video_note_id: str = None, document_id: str = None, document_name: str = None
+	):
+		if self.conn is None:
+			await self.connect()
 
-        query = '''
+		query = '''
             INSERT OR REPLACE INTO lessons (
                 lesson_id, module_id, course_id, lesson_title, text, 
                 audio, photo, video, video_note, document, document_name
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         '''
-        await self.execute_query(query, (
-            lesson_id, module_id, course_id, lesson_title, text,
-            audio_id, photo_id, video_id, video_note_id, document_id, document_name
-        ))
+		await self.execute_query(query, (
+			lesson_id, module_id, course_id, lesson_title, text,
+			audio_id, photo_id, video_id, video_note_id, document_id, document_name
+		))
 
-    async def add_test_answer(self, course_id, module_id, lesson_id, test_id, answer_num, answer):
-        if self.conn is None:
-            await self.connect()
+	async def add_test_answer(self, course_id, module_id, lesson_id, test_id, answer_num, answer):
+		if self.conn is None:
+			await self.connect()
 
-        query = '''
+		query = '''
             INSERT INTO test_answers (course_id, module_id, lesson_id, test_id, answer_num, answer)
             VALUES (?, ?, ?, ?, ?, ?)
         '''
-        await self.execute_query(query, (course_id, module_id, lesson_id, test_id, answer_num, answer))
+		await self.execute_query(query, (course_id, module_id, lesson_id, test_id, answer_num, answer))
 
-    async def delete_test_question(self, course_id, module_id, lesson_id, test_id):
-        if self.conn is None:
-            await self.connect()
+	async def delete_test_question(self, course_id, module_id, lesson_id, test_id):
+		if self.conn is None:
+			await self.connect()
 
-        # Удаляем тестовые ответы, связанные с вопросом
-        await self.execute_query('''
+		# Удаляем тестовые ответы, связанные с вопросом
+		await self.execute_query('''
             DELETE FROM test_answers
             WHERE course_id = ? AND module_id = ? AND lesson_id = ? AND test_id = ?
         ''', (course_id, module_id, lesson_id, test_id))
 
-        # Удаляем сам тестовый вопрос
-        await self.execute_query('''
+		# Удаляем сам тестовый вопрос
+		await self.execute_query('''
             DELETE FROM test_questions
             WHERE course_id = ? AND module_id = ? AND lesson_id = ? AND test_id = ?
         ''', (course_id, module_id, lesson_id, test_id))
 
-    async def get_courses_ids(self, tg_id):
-        if self.conn is None:
-            await self.connect()
+	async def get_courses_ids(self, tg_id):
+		if self.conn is None:
+			await self.connect()
 
-        query = '''
+		query = '''
             SELECT course_id
             FROM courses
             WHERE owner_id = ?
         '''
 
-        user_courses = await self.execute_query(query, (tg_id,))
-        return [course[0] for course in user_courses] if user_courses else []
+		user_courses = await self.execute_query(query, (tg_id,))
+		return [course[0] for course in user_courses] if user_courses else []
 
-    # ------------------- оставшиеся методы -------------------
-    async def get_creators_ids(self) -> list:
-        if self.conn is None:
-            await self.connect()
+	# ------------------- оставшиеся методы -------------------
+	async def get_creators_ids(self) -> list:
+		if self.conn is None:
+			await self.connect()
 
-        current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        query = '''
+		query = '''
             SELECT u.tg_id
             FROM users u
             JOIN subscription s ON u.tg_id = s.tg_id
             WHERE s.valid_till > ?
         '''
 
-        creators_ids = await self.execute_query(query, (current_datetime,))
-        creator_ids = [row[0] for row in creators_ids]
+		creators_ids = await self.execute_query(query, (current_datetime,))
+		creator_ids = [row[0] for row in creators_ids]
 
-        return creator_ids
+		return creator_ids
 
-    async def get_module_name(self, course_id, module_id):
-        if self.conn is None:
-            await self.connect()
+	async def get_module_name(self, course_id, module_id):
+		if self.conn is None:
+			await self.connect()
 
-        query = '''
+		query = '''
             SELECT module_name
             FROM modules
             WHERE course_id = ? AND module_id = ?
         '''
 
-        result = await self.execute_query(query, (course_id, module_id))
+		result = await self.execute_query(query, (course_id, module_id))
 
-        if result:
-            return result[0][0]
-        else:
-            return None
+		if result:
+			return result[0][0]
+		else:
+			return None
 
-    async def get_course_modules(self, course_id):
-        query = '''
+	async def get_course_modules(self, course_id):
+		query = '''
 	            SELECT module_id, module_name
 	            FROM modules
 	            WHERE course_id = ?
 	        '''
-        modules_info = await self.execute_query(query, (course_id,))
-        return modules_info
+		modules_info = await self.execute_query(query, (course_id,))
+		return modules_info
 
-    async def get_module_lessons(self, course_id, module_id):
-        query = '''
+	async def get_module_lessons(self, course_id, module_id):
+		query = '''
 	            SELECT lesson_id, lesson_title
 	            FROM lessons
 	            WHERE course_id = ? AND module_id = ?
 	        '''
-        lessons_info = await self.execute_query(query, (course_id, module_id))
-        return lessons_info
+		lessons_info = await self.execute_query(query, (course_id, module_id))
+		return lessons_info
 
-    async def get_promocodes_dict(self):
-        query = '''
+	async def get_promocodes_dict(self):
+		query = '''
 	            SELECT promocode, course_id
 	            FROM promocodes
 	        '''
-        promocodes_info = await self.execute_query(query)
-        promocodes_dict = {row[0]: row[1] for row in promocodes_info}
-        return promocodes_dict
+		promocodes_info = await self.execute_query(query)
+		promocodes_dict = {row[0]: row[1] for row in promocodes_info}
+		return promocodes_dict
 
-    async def add_course_to_user(self, tg_id, course_id):
-        current_courses_ids = await self.get_courses_ids(tg_id)
+	async def add_course_to_user(self, tg_id, course_id):
+		current_courses_ids = await self.get_courses_ids(tg_id)
 
-        if current_courses_ids is not None:
-            # Если у пользователя уже есть какие-то курсы
-            new_courses_ids = f'{current_courses_ids},{course_id}'
-        else:
-            # Если у пользователя еще нет курсов
-            new_courses_ids = str(course_id)
+		if current_courses_ids is not None:
+			# Если у пользователя уже есть какие-то курсы
+			new_courses_ids = f'{current_courses_ids},{course_id}'
+		else:
+			# Если у пользователя еще нет курсов
+			new_courses_ids = str(course_id)
 
-        # Обновляем поле courses_ids в таблице users
-        update_query = '''
+		# Обновляем поле courses_ids в таблице users
+		update_query = '''
 	            UPDATE users
 	            SET courses_ids = ?
 	            WHERE tg_id = ?
 	        '''
-        await self.execute_query(update_query, (new_courses_ids, tg_id))
+		await self.execute_query(update_query, (new_courses_ids, tg_id))
 
-    async def get_course_name(self, course_id):
-        query = '''
+	async def get_course_name(self, course_id):
+		query = '''
 	            SELECT course_name
 	            FROM courses
 	            WHERE course_id = ?
 	        '''
-        course_info = await self.execute_query(query, (course_id,))
-        return course_info[0][0] if course_info else None
+		course_info = await self.execute_query(query, (course_id,))
+		return course_info[0][0] if course_info else None
 
-    async def get_course_description(self, course_id):
-        query = '''
+	async def get_course_description(self, course_id):
+		query = '''
     	            SELECT course_description
     	            FROM courses
     	            WHERE course_id = ?
     	        '''
-        course_info = await self.execute_query(query, (course_id,))
-        return course_info[0][0] if course_info else None
+		course_info = await self.execute_query(query, (course_id,))
+		return course_info[0][0] if course_info else None
 
-    async def get_users_ids(self):
-        query = '''
+	async def get_users_ids(self):
+		query = '''
 	            SELECT tg_id
 	            FROM users
 	        '''
-        users_ids = await self.execute_query(query)
-        return [row[0] for row in users_ids]
+		users_ids = await self.execute_query(query)
+		return [row[0] for row in users_ids]
 
-    async def get_number_of_created_courses(self, tg_id):
-        query = '''
+	async def get_number_of_created_courses(self, tg_id):
+		query = '''
 	            SELECT COUNT(*) as num_created_courses
 	            FROM courses
 	            WHERE owner_id = ?
 	        '''
-        result = await self.execute_query(query, (tg_id,))
-        return result[0][0] if result else 0
+		result = await self.execute_query(query, (tg_id,))
+		return result[0][0] if result else 0
 
-    async def get_subscription_data(self):
-        query = '''
+	async def get_subscription_data(self):
+		query = '''
 	            SELECT status, COUNT(*) as num_courses
 	            FROM (
 	                SELECT
@@ -420,83 +420,83 @@ class DataBase:
 	            ) AS sub_status
 	            GROUP BY status
 	        '''
-        result = await self.execute_query(query)
-        subscription_data = {row[0]: row[1] for row in result}
-        return subscription_data
+		result = await self.execute_query(query)
+		subscription_data = {row[0]: row[1] for row in result}
+		return subscription_data
 
-    async def get_promocodes(self):
-        query = '''
+	async def get_promocodes(self):
+		query = '''
 	            SELECT promocode
 	            FROM promocodes
 	        '''
-        result = await self.execute_query(query)
-        promocodes = [row[0] for row in result]
-        return promocodes
+		result = await self.execute_query(query)
+		promocodes = [row[0] for row in result]
+		return promocodes
 
-    async def get_promocode(self, course_id):
-        query = '''
+	async def get_promocode(self, course_id):
+		query = '''
 	            SELECT promocode
 	            FROM promocodes
 	            WHERE course_id = ?
 	        '''
-        result = await self.execute_query(query, (course_id,))
-        promocodes = [row[0] for row in result]
-        return promocodes
+		result = await self.execute_query(query, (course_id,))
+		promocodes = [row[0] for row in result]
+		return promocodes
 
-    async def get_user_courses(self, tg_id):
-        query = '''
+	async def get_user_courses(self, tg_id):
+		query = '''
 	            SELECT course_id
 	            FROM user_courses
 	            WHERE tg_id = ?
 	        '''
-        result = await self.execute_query(query, (tg_id,))
-        return [row[0] for row in result]
+		result = await self.execute_query(query, (tg_id,))
+		return [row[0] for row in result]
 
-    async def add_user_course(self, tg_id, course_id):
-        query = '''
+	async def add_user_course(self, tg_id, course_id):
+		query = '''
 	            INSERT INTO user_courses (tg_id, course_id)
 	            VALUES (?, ?)
 	        '''
-        await self.execute_query(query, (tg_id, course_id))
+		await self.execute_query(query, (tg_id, course_id))
 
-    async def add_promocode(self, promocode, course_id):
-        query = '''
+	async def add_promocode(self, promocode, course_id):
+		query = '''
 	        INSERT OR REPLACE INTO promocodes (promocode, course_id)
 	        VALUES (?, ?)
 	    '''
-        await self.execute_query(query, (promocode, course_id))
+		await self.execute_query(query, (promocode, course_id))
 
-    async def add_test_question(self, course_id, module_id, lesson_id, test_id, test_question, right_answer):
-        if self.conn is None:
-            await self.connect()
+	async def add_test_question(self, course_id, module_id, lesson_id, test_id, test_question, right_answer):
+		if self.conn is None:
+			await self.connect()
 
-        query = '''
+		query = '''
             INSERT OR REPLACE INTO test_questions (
                 course_id, module_id, lesson_id, test_id, test_question, right_answer
             )
             VALUES (?, ?, ?, ?, ?, ?)
         '''
-        await self.execute_query(query, (course_id, module_id, lesson_id, test_id, test_question, right_answer))
+		await self.execute_query(query, (course_id, module_id, lesson_id, test_id, test_question, right_answer))
 
-    async def get_test_numbers(self, course_id, module_id, lesson_id):
-        if self.conn is None:
-            await self.connect()
+	async def get_test_numbers(self, course_id, module_id, lesson_id):
+		if self.conn is None:
+			await self.connect()
 
-        query = '''
+		query = '''
             SELECT COUNT(*) FROM test_questions
             WHERE course_id = ? AND module_id = ? AND lesson_id = ?
         '''
-        result = await self.execute_query(query, (course_id, module_id, lesson_id))
+		result = await self.execute_query(query, (course_id, module_id, lesson_id))
 
-        return result[0][0] + 1 if result else 1
+		return result[0][0] + 1 if result else 1
 
-    async def get_subscription_status(self, tg_id):
-        if self.conn is None:
-            await self.connect()
+	async def get_subscription_status(self, tg_id):
+		if self.conn is None:
+			await self.connect()
 
-        current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+		current_datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        query = '''
+		query = '''
             SELECT CASE
                 WHEN s.valid_till > ? THEN 'active'
                 ELSE 'user'
@@ -506,270 +506,282 @@ class DataBase:
             WHERE u.tg_id = ?
         '''
 
-        result = await self.execute_query(query, (current_datetime, tg_id))
+		result = await self.execute_query(query, (current_datetime, tg_id))
 
-        if result:
-            return result[0][0]
-        else:
-            return 'user'
+		if result:
+			return result[0][0]
+		else:
+			return 'user'
 
-    async def generate_unique_course_id(self):
-        while True:
-            course_id = random.randint(10000000, 99999999)  # Генерация восьмизначного числа
-            # Проверка, есть ли уже такой course_id в базе
-            existing_courses = await self.execute_query(
-                'SELECT course_id FROM courses WHERE course_id = ?', (course_id,)
-            )
-            if not existing_courses:
-                return course_id
+	async def generate_unique_course_id(self):
+		while True:
+			course_id = random.randint(10000000, 99999999)  # Генерация восьмизначного числа
+			# Проверка, есть ли уже такой course_id в базе
+			existing_courses = await self.execute_query(
+				'SELECT course_id FROM courses WHERE course_id = ?', (course_id,)
+			)
+			if not existing_courses:
+				return course_id
 
-    async def get_created_courses_ids(self, tg_id):
-        if self.conn is None:
-            await self.connect()
+	async def get_created_courses_ids(self, tg_id):
+		if self.conn is None:
+			await self.connect()
 
-        query = '''
+		query = '''
             SELECT course_id
             FROM courses
             WHERE owner_id = ?
         '''
 
-        user_courses = await self.execute_query(query, (tg_id,))
+		user_courses = await self.execute_query(query, (tg_id,))
 
-        return [course[0] for course in user_courses] if user_courses else []
+		return [course[0] for course in user_courses] if user_courses else []
 
-    async def generate_unique_promocode(self, course_id):
-        while True:
-            # Генерация промокода из 8 случайных букв
-            promocode = ''.join(random.choice(string.ascii_uppercase) for _ in range(8))
-            # Проверка, есть ли уже такой промокод в базе для данного курса
-            existing_promocodes = await self.execute_query(
-                'SELECT promocode FROM promocodes WHERE promocode = ? AND course_id = ?',
-                (promocode, course_id)
-            )
-            if not existing_promocodes:
-                return promocode
+	async def generate_unique_promocode(self, course_id):
+		while True:
+			# Генерация промокода из 8 случайных букв
+			promocode = ''.join(random.choice(string.ascii_uppercase) for _ in range(8))
+			# Проверка, есть ли уже такой промокод в базе для данного курса
+			existing_promocodes = await self.execute_query(
+				'SELECT promocode FROM promocodes WHERE promocode = ? AND course_id = ?',
+				(promocode, course_id)
+			)
+			if not existing_promocodes:
+				return promocode
 
-    # Запросы для курсов, модулей, уроков
-    async def get_course_info(self, course_id):
-        query = '''
+	# Запросы для курсов, модулей, уроков
+	async def get_course_info(self, course_id):
+		query = '''
 	        SELECT course_name, course_description, course_image_id
 	        FROM courses
 	        WHERE course_id = ?
 	    '''
-        result = await self.execute_query(query, (course_id,))
-        return result[0] if result else None
+		result = await self.execute_query(query, (course_id,))
+		return result[0] if result else None
 
-    async def get_module_info(self, course_id, module_id):
-        query = '''
+	async def get_module_info(self, course_id, module_id):
+		query = '''
 	        SELECT module_name, module_description, module_image
 	        FROM modules
 	        WHERE course_id = ? AND module_id = ?
 	    '''
-        result = await self.execute_query(query, (course_id, module_id))
-        return result[0] if result else None
+		result = await self.execute_query(query, (course_id, module_id))
+		return result[0] if result else None
 
-    async def get_lesson_info(self, course_id, module_id, lesson_id):
-        query = '''
+	async def get_lesson_info(self, course_id, module_id, lesson_id):
+		query = '''
 	        SELECT lesson_title, text, audio, photo, video, video_note, document
 	        FROM lessons
 	        WHERE course_id = ? AND module_id = ? AND lesson_id = ?
 	    '''
-        result = await self.execute_query(query, (course_id, module_id, lesson_id))
-        print(result)
-        return result[0] if result else None
+		result = await self.execute_query(query, (course_id, module_id, lesson_id))
+		print(result)
+		return result[0] if result else None
 
-    async def get_modules_numbers(self, course_id):
-        query = '''
+	async def get_modules_numbers(self, course_id):
+		query = '''
 	            SELECT COUNT(*) as num_modules
 	            FROM modules
 	            WHERE course_id = ?
 	        '''
-        result = await self.execute_query(query, (course_id,))
-        return result[0][0] if result else 0
+		result = await self.execute_query(query, (course_id,))
+		return result[0][0] if result else 0
 
-    async def get_lessons_numbers(self, course_id, module_id):
-        query = '''
+	async def get_lessons_numbers(self, course_id, module_id):
+		query = '''
 	            SELECT COUNT(*) as num_lessons
 	            FROM lessons
 	            WHERE course_id = ? AND module_id = ?
 	        '''
-        result = await self.execute_query(query, (course_id, module_id))
-        return result[0][0] if result else 0
+		result = await self.execute_query(query, (course_id, module_id))
+		return result[0][0] if result else 0
 
-    # Обновления данных в таблицах
-    async def update_course_name(self, course_id, new_name):
-        query = '''
+	# Обновления данных в таблицах
+	async def update_course_name(self, course_id, new_name):
+		query = '''
 	            UPDATE courses
 	            SET course_name = ?
 	            WHERE course_id = ?
 	        '''
-        await self.execute_query(query, (new_name, course_id))
+		await self.execute_query(query, (new_name, course_id))
 
-    async def update_module_name(self, course_id, module_id, new_name):
-        query = '''
+	async def update_module_name(self, course_id, module_id, new_name):
+		query = '''
 	            UPDATE modules
 	            SET module_name = ?
 	            WHERE course_id = ? AND module_id = ?
 	        '''
-        await self.execute_query(query, (new_name, course_id, module_id))
+		await self.execute_query(query, (new_name, course_id, module_id))
 
-    async def update_lesson_title(self, course_id, module_id, lesson_id, new_title):
-        query = '''
+	async def update_lesson_title(self, course_id, module_id, lesson_id, new_title):
+		query = '''
 	            UPDATE lessons
 	            SET lesson_title = ?
 	            WHERE course_id = ? AND module_id = ? AND lesson_id = ?
 	        '''
-        await self.execute_query(query, (new_title, course_id, module_id, lesson_id))
+		await self.execute_query(query, (new_title, course_id, module_id, lesson_id))
 
-    async def update_course_description(self, course_id, new_description):
-        query = '''
+	async def update_course_description(self, course_id, new_description):
+		query = '''
 	            UPDATE courses
 	            SET course_description = ?
 	            WHERE course_id = ?
 	        '''
-        await self.execute_query(query, (new_description, course_id))
+		await self.execute_query(query, (new_description, course_id))
 
-    async def update_module_description(self, course_id, module_id, new_description):
-        query = '''
+	async def update_module_description(self, course_id, module_id, new_description):
+		query = '''
 	            UPDATE modules
 	            SET module_description = ?
 	            WHERE course_id = ? AND module_id = ?
 	        '''
-        await self.execute_query(query, (new_description, course_id, module_id))
+		await self.execute_query(query, (new_description, course_id, module_id))
 
-    async def update_lesson_description(self, course_id, module_id, lesson_id, new_description):
-        query = '''
+	async def update_lesson_description(self, course_id, module_id, lesson_id, new_description):
+		query = '''
 	            UPDATE lessons
 	            SET lesson_description = ?
 	            WHERE course_id = ? AND module_id = ? AND lesson_id = ?
 	        '''
-        await self.execute_query(query, (new_description, course_id, module_id, lesson_id))
+		await self.execute_query(query, (new_description, course_id, module_id, lesson_id))
 
-    async def update_course_image(self, course_id, new_image):
-        query = '''
+	async def update_course_image(self, course_id, new_image):
+		query = '''
 	            UPDATE courses
 	            SET course_image_id = ?
 	            WHERE course_id = ?
 	        '''
-        await self.execute_query(query, (new_image, course_id))
+		await self.execute_query(query, (new_image, course_id))
 
-    async def update_module_image(self, course_id, module_id, new_image):
-        query = '''
+	async def update_module_image(self, course_id, module_id, new_image):
+		query = '''
 	            UPDATE modules
 	            SET module_image = ?
 	            WHERE course_id = ? AND module_id = ?
 	        '''
-        await self.execute_query(query, (new_image, course_id, module_id))
+		await self.execute_query(query, (new_image, course_id, module_id))
 
-    async def update_lesson_image(self, course_id, module_id, lesson_id, new_image):
-        query = '''
+	async def update_lesson_image(self, course_id, module_id, lesson_id, new_image):
+		query = '''
 	            UPDATE lessons
 	            SET photo = ?
 	            WHERE course_id = ? AND module_id = ? AND lesson_id = ?
 	        '''
-        await self.execute_query(query, (new_image, course_id, module_id, lesson_id))
+		await self.execute_query(query, (new_image, course_id, module_id, lesson_id))
 
-    async def update_lesson_materials(self, course_id, module_id, lesson_id, materials):
-        valid_materials = {
-            'audio': 'audio',
-            'photo': 'photo',
-            'video': 'video',
-            'video_note': 'video_note',
-            'document': 'document',
-            'document_name': 'document_name'
-        }
+	async def update_lesson_materials(self, course_id, module_id, lesson_id, materials):
+		valid_materials = {
+			'audio': 'audio',
+			'photo': 'photo',
+			'video': 'video',
+			'video_note': 'video_note',
+			'document': 'document',
+			'document_name': 'document_name'
+		}
 
-        update_query = 'UPDATE lessons SET '
+		update_query = 'UPDATE lessons SET '
 
-        for key, field in valid_materials.items():
-            if key in materials and materials[key] is not None:
-                update_query += f'{field} = ?, '
+		for key, field in valid_materials.items():
+			if key in materials and materials[key] is not None:
+				update_query += f'{field} = ?, '
 
-        # Удаляем последнюю запятую и пробел
-        update_query = update_query.rstrip(', ')
+		# Удаляем последнюю запятую и пробел
+		update_query = update_query.rstrip(', ')
 
-        update_query += ' WHERE course_id = ? AND module_id = ? AND lesson_id = ?'
+		update_query += ' WHERE course_id = ? AND module_id = ? AND lesson_id = ?'
 
-        # Собираем значения для запроса
-        values = [materials[key] for key in valid_materials if key in materials and materials[key] is not None]
-        values.extend([course_id, module_id, lesson_id])
+		# Собираем значения для запроса
+		values = [materials[key] for key in valid_materials if key in materials and materials[key] is not None]
+		values.extend([course_id, module_id, lesson_id])
 
-        # Выполняем запрос
-        await self.execute_query(update_query, values)
+		# Выполняем запрос
+		await self.execute_query(update_query, values)
 
-    async def get_test_question(self, course_id, module_id, lesson_id, test_id):
-        if self.conn is None:
-            await self.connect()
+	async def get_test_question(self, course_id, module_id, lesson_id, test_id):
+		if self.conn is None:
+			await self.connect()
 
-        # Получаем информацию о тестовом вопросе и номере правильного ответа
-        result = await self.execute_query('''
+		# Получаем информацию о тестовом вопросе и номере правильного ответа
+		result = await self.execute_query('''
             SELECT test_question, right_answer
             FROM test_questions
             WHERE course_id = ? AND module_id = ? AND lesson_id = ? AND test_id = ?
         ''', (course_id, module_id, lesson_id, test_id))
 
-        if result:
-            test_question, right_answer = result[0]
-            return test_question, right_answer
-        else:
-            return None, None
+		if result:
+			test_question, right_answer = result[0]
+			return test_question, right_answer
+		else:
+			return None, None
 
-    async def get_test_answer(self, course_id, module_id, lesson_id, test_id):
-        if self.conn is None:
-            await self.connect()
+	async def get_test_answers(self, course_id, module_id, lesson_id, test_id):
+		if self.conn is None:
+			await self.connect()
 
-        # Получаем информацию о тестовом ответе
-        result = await self.execute_query('''
-            SELECT test_id, answer
-            FROM test_answers
-            WHERE course_id = ? AND module_id = ? AND lesson_id = ? AND test_id = ?
-        ''', (course_id, module_id, lesson_id, test_id))
+		# Получаем информацию о тестовом ответе
+		result = await self.execute_query('''
+		        SELECT test_id, answer
+		        FROM test_answers
+		        WHERE course_id = ? AND module_id = ? AND lesson_id = ? AND test_id = ?
+		    ''', (course_id, module_id, lesson_id, test_id))
 
-        if not result:
-            return None, None
+		if not result:
+			return []  # Возвращаем пустой список, если ответов нет
 
-        test_id, answer = result[0]
+		test_answers = [(row[0], row[1]) for row in result]
+		return test_answers
 
-        return test_id, answer
-
-    async def check_next_lesson(self, course_id, module_id, lesson_id):
-        query = '''
+	async def check_next_lesson(self, course_id, module_id, lesson_id):
+		query = '''
             SELECT 1
             FROM lessons
             WHERE course_id = ? AND module_id = ? AND lesson_id > ?
             LIMIT 1
         '''
-        result = await self.execute_query(query, (course_id, module_id, lesson_id))
-        return bool(result)
+		result = await self.execute_query(query, (course_id, module_id, lesson_id))
+		return bool(result)
 
-    async def check_next_module(self, course_id, module_id):
-        query = '''
+	async def get_test_id_in_lesson(self, course_id, module_id, lesson_id):
+		if self.conn is None:
+			await self.connect()
+
+		query = '''
+	        SELECT test_id
+	        FROM test_questions
+	        WHERE course_id = ? AND module_id = ? AND lesson_id = ?
+	    '''
+		result = await self.execute_query(query, (course_id, module_id, lesson_id))
+
+		return result[0][0] if result else None
+
+	async def check_next_module(self, course_id, module_id):
+		query = '''
             SELECT 1
             FROM modules
             WHERE course_id = ? AND module_id > ?
             LIMIT 1
         '''
-        result = await self.execute_query(query, (course_id, module_id))
-        return bool(result)
+		result = await self.execute_query(query, (course_id, module_id))
+		return bool(result)
 
-    async def get_next_lesson_in_module(self, course_id, module_id, lesson_id):
-        query = '''
+	async def get_next_lesson_in_module(self, course_id, module_id, lesson_id):
+		query = '''
             SELECT lesson_id
             FROM lessons
             WHERE course_id = ? AND module_id = ? AND lesson_id > ?
             ORDER BY lesson_id
             LIMIT 1
         '''
-        result = await self.execute_query(query, (course_id, module_id, lesson_id))
-        return result[0][0] if result else None
+		result = await self.execute_query(query, (course_id, module_id, lesson_id))
+		return result[0][0] if result else None
 
-    async def get_next_module(self, course_id, module_id):
-        query = '''
+	async def get_next_module(self, course_id, module_id):
+		query = '''
             SELECT module_id
             FROM modules
             WHERE course_id = ? AND module_id > ?
             ORDER BY module_id
             LIMIT 1
         '''
-        result = await self.execute_query(query, (course_id, module_id))
-        return result[0][0] if result else None
+		result = await self.execute_query(query, (course_id, module_id))
+		return result[0][0] if result else None
