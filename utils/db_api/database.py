@@ -131,6 +131,19 @@ class DataBase:
             )
         ''')
 
+		await self.execute_query('''
+		    CREATE TABLE IF NOT EXISTS final_message (
+			    course_id INT REFERENCES courses(course_id),
+			    text TEXT,
+			    audio TEXT,
+			    photo TEXT,
+			    video TEXT,
+			    video_note TEXT,
+			    document TEXT,
+			    document_name TEXT
+			)
+		''')
+
 	async def add_user_post(self, tg_id: int, post_id: int) -> None:
 		if self.conn is None:
 			await self.connect()
@@ -785,3 +798,53 @@ class DataBase:
         '''
 		result = await self.execute_query(query, (course_id, module_id))
 		return result[0][0] if result else None
+
+	async def add_final_message(self, course_id, text=None, audio=None, photo=None, video=None, video_note=None,
+	                            document=None, document_name=None):
+		if self.conn is None:
+			await self.connect()
+
+		query = '''
+	        INSERT INTO final_message (course_id, text, audio, photo, video, video_note, document, document_name)
+	        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	    '''
+		await self.execute_query(query, (
+			course_id, text, audio, photo, video, video_note, document, document_name
+		))
+
+	async def update_final_message(self, course_id, text=None, audio=None, photo=None, video=None, video_note=None,
+	                               document=None, document_name=None):
+		if self.conn is None:
+			await self.connect()
+
+		query = '''
+	        UPDATE final_message
+	        SET
+	            text = ?,
+	            audio = ?,
+	            photo = ?,
+	            video = ?,
+	            video_note = ?,
+	            document = ?,
+	            document_name = ?
+	        WHERE course_id = ?
+	    '''
+		await self.execute_query(query, (
+			text, audio, photo, video, video_note, document, document_name, course_id
+		))
+
+	async def get_final_message(self, course_id):
+		if self.conn is None:
+			await self.connect()
+
+		query = '''
+	        SELECT *
+	        FROM final_message
+	        WHERE course_id = ?
+	    '''
+		result = await self.execute_query(query, (course_id,))
+
+		if not result:
+			return None
+
+		return result[0]
