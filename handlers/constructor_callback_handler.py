@@ -244,6 +244,39 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		except:
 			pass
 
+	elif callback.startswith("edit_final_message_"):
+		course_id = int(callback.split("_")[3])
+
+		async with state.proxy() as data:
+			data["course_id"] = course_id
+
+		text = "Отправьте финальное сообщение, это сообщение пользователи будут видеть, когда продут весь последний урок курса.\n" \
+			   "Доступные форматы:\n" \
+			   "1) Текст (поддерживается форматирование)\n" \
+			   "2) Фото\n" \
+			   "3) Фото с текстом\n" \
+			   "4) Голосовое сообщение\n" \
+			   "5) Видео\n" \
+			   "6) Видеосообщение\n" \
+			   "7) PDF-файлы\n"
+
+		await SettingsStates.final_message.set()
+		try:
+			await bot.edit_message_text(
+				chat_id=chat,
+				text=text,
+				message_id=m_id,
+				parse_mode="html",
+				reply_markup=InlineKeyboardMarkup().add(
+					InlineKeyboardButton(
+						text="К настройке курса",
+						callback_data=f"course_settings_{course_id}"
+					)
+				)
+			)
+		except:
+			print(f"проблемы с колбэк: {callback}")
+
 	elif callback[:10] == "add_module":
 		course_id = int(callback.split("_")[2])
 		new_module_id = await db.get_modules_numbers(course_id=course_id) + 1
@@ -733,6 +766,27 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			parse_mode="html",
 			photo=image_id,
 			reply_markup=keyboard
+		)
+
+	elif callback.startswith("final_message_"):
+		course_id = int(callback.split("_")[2])
+		text, voice_id, photo_id, video_id, video_note_id, document_id = await db.get_final_message(course_id=course_id)
+
+		await send_lesson(
+			bot=bot,
+			chat_id=chat,
+			text=text,
+			audio=voice_id,
+			photo=photo_id,
+			video=video_id,
+			video_note=video_note_id,
+			document=document_id,
+			markup=InlineKeyboardMarkup().add(
+				InlineKeyboardButton(
+					text="В начало курса",
+					callback_data=f"course_{course_id}"
+				)
+			)
 		)
 
 	elif callback[:4] == "test":

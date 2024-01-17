@@ -13,15 +13,15 @@ async def generate_multi_keyboard(course_id=None, module_id=None, lesson_id=None
 		else:
 			lesson_number = await db.get_lessons_numbers(course_id=course_id, module_id=module_id)
 			if lesson_id < lesson_number:
-				# lesson_name = await db.get_lesson_name(course_id=course_id, module_id=module_id, lesson_id=lesson_id + 1)
-				return "Следующий урок", f"lesson_{course_id}_{module_id}_{lesson_id + 1}"  # TODO f"{lesson_id + 1}. {lesson_name}
+				lesson_name = await db.get_lesson_name(course_id=course_id, module_id=module_id, lesson_id=lesson_id + 1)
+				return f"{lesson_id + 1}. {lesson_name}", f"lesson_{course_id}_{module_id}_{lesson_id + 1}"  # TODO f"{lesson_id + 1}. {lesson_name}
 			else:
 				module_number = await db.get_modules_numbers(course_id=course_id)
 				if module_id < module_number:
 					module_name = await db.get_module_name(course_id=course_id, module_id=module_id + 1)
 					return f"{module_id + 1}. {module_name}", f"module_{course_id}_{module_id}"
 				else:
-					return "К окончанию курса", f"finish_message_{course_id}_{module_id}_{lesson_id}"
+					return "К окончанию курса", f"finish_message_{course_id}"
 
 
 	if test_id:
@@ -70,12 +70,22 @@ async def generate_multi_keyboard(course_id=None, module_id=None, lesson_id=None
 		elif has_next_module:
 			next_module_id = await db.get_next_module(course_id, module_id)
 			if next_module_id:
+				lesson_name = await db.get_lesson_name(course_id=course_id, module_id=module_id,
+													   lesson_id=lesson_id + 1)
 				keyboard.add(
 					InlineKeyboardButton(
-						text="Следующий модуль",
+						text=f"{lesson_id + 1}. {lesson_name}",
 						callback_data=f"module_{course_id}_{next_module_id}"
 					)
 				)
+
+		else:
+			keyboard.add(
+				InlineKeyboardButton(
+					text="К окончанию курса",
+					callback_data=f"final_message_{course_id}"
+				)
+			)
 
 		keyboard.add(
 			InlineKeyboardButton(

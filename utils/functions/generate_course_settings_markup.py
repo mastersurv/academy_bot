@@ -26,6 +26,11 @@ async def generate_courses_settings_keyboard(course_id: int) -> InlineKeyboardMa
         )
     ).add(
         InlineKeyboardButton(
+            text="Финальное сообщение",
+            callback_data=f"edit_final_message_{course_id}"
+        )
+    ).add(
+        InlineKeyboardButton(
             text="Добавить модуль",
             callback_data=f"add_module_{course_id}"
         )

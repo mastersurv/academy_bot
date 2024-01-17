@@ -102,8 +102,7 @@ class DataBase:
                 photo TEXT,
                 video TEXT,
                 video_note TEXT,
-                document TEXT,
-                document_name TEXT
+                document TEXT
             )
         ''')
 
@@ -139,8 +138,7 @@ class DataBase:
 			    photo TEXT,
 			    video TEXT,
 			    video_note TEXT,
-			    document TEXT,
-			    document_name TEXT
+			    document TEXT
 			)
 		''')
 
@@ -800,20 +798,20 @@ class DataBase:
 		return result[0][0] if result else None
 
 	async def add_final_message(self, course_id, text=None, audio=None, photo=None, video=None, video_note=None,
-	                            document=None, document_name=None):
+	                            document=None):
 		if self.conn is None:
 			await self.connect()
 
 		query = '''
-	        INSERT INTO final_message (course_id, text, audio, photo, video, video_note, document, document_name)
-	        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	        INSERT INTO final_message (course_id, text, audio, photo, video, video_note, document)
+	        VALUES (?, ?, ?, ?, ?, ?, ?, )
 	    '''
 		await self.execute_query(query, (
-			course_id, text, audio, photo, video, video_note, document, document_name
+			course_id, text, audio, photo, video, video_note, document
 		))
 
 	async def update_final_message(self, course_id, text=None, audio=None, photo=None, video=None, video_note=None,
-	                               document=None, document_name=None):
+	                               document=None):
 		if self.conn is None:
 			await self.connect()
 
@@ -826,11 +824,10 @@ class DataBase:
 	            video = ?,
 	            video_note = ?,
 	            document = ?,
-	            document_name = ?
 	        WHERE course_id = ?
 	    '''
 		await self.execute_query(query, (
-			text, audio, photo, video, video_note, document, document_name, course_id
+			text, audio, photo, video, video_note, document, course_id
 		))
 
 	async def get_final_message(self, course_id):

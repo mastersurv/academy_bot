@@ -2,7 +2,7 @@ from aiogram import Bot
 import os
 
 
-async def send_lesson(bot: Bot, chat_id, lesson_name, text, audio, photo, video, video_note, document, markup=None):
+async def send_lesson(bot: Bot, chat_id, text, audio, photo, video, video_note, document, markup=None, lesson_name=None):
     funnel_message = 0
     if photo is not None:
         try:
@@ -61,6 +61,7 @@ async def send_lesson(bot: Bot, chat_id, lesson_name, text, audio, photo, video,
             )
 
     elif text is not None:
+        text = f"<b>{lesson_name}</b>\n\n" + text if lesson_name else text
         try:
             funnel_message = await bot.send_message(
                 chat_id=chat_id,

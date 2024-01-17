@@ -13,6 +13,7 @@ class SettingsStates(StatesGroup):
     course_name = State()
     course_description = State()
     course_image = State()
+    final_message = State()
 
     module_name = State()
     module_description = State()

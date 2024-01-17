@@ -15,6 +15,7 @@ from states_handlers.get_promocode_handler import get_promocode_handler
 from course_creation_handlers.edit_course_name import edit_course_name
 from course_creation_handlers.edit_course_description import edit_course_description
 from course_creation_handlers.edit_course_image import edit_course_image
+from course_creation_handlers.edit_final_message import edit_final_message
 
 from module_creation_handlers.edit_module_name import edit_module_name
 from module_creation_handlers.edit_module_description import edit_module_description
@@ -114,6 +115,7 @@ class MyBot:
         self.dp.register_message_handler(callback=edit_course_name, state=SettingsStates.course_name, content_types=["text"])
         self.dp.register_message_handler(callback=edit_course_description, state=SettingsStates.course_description, content_types=["text"])
         self.dp.register_message_handler(callback=edit_course_image, state=SettingsStates.course_image, content_types=["photo"])
+        self.dp.register_message_handler(callback=edit_final_message, state=SettingsStates.final_message, content_types=ContentTypes.ANY)
 
         self.dp.register_message_handler(callback=edit_module_name, state=SettingsStates.module_name,
                                          content_types=["text"])
