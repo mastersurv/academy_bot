@@ -105,6 +105,33 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		except:
 			pass
 
+	elif callback == "courses_analytics":
+		analytics_keyboard = await generate_created_courses_keyboard(tg_id=tg_id, analytics=True)
+		text = "Выберите курс, аналитику по которому хотите посмотреть:"
+		try:
+			await bot.edit_message_text(
+				chat_id=chat,
+				text=text,
+				message_id=m_id,
+				reply_markup=analytics_keyboard.add(
+					InlineKeyboardButton(
+						text="В меню",
+						callback_data="menu"
+					)
+				)
+			)
+		except:
+			pass
+
+	elif callback.startswith("course_analytic"):
+		course_id = int(callback.split("_")[2])
+		filename = "СЕРГЕЙ ВСТАВЬ НАЗВАНИЕ ФАЙЛА.xlsx"
+		with open(filename, "rb") as excel_file:
+			await bot.send_document(
+				chat_id=chat,
+				document=excel_file.read()
+			)
+
 	elif callback == "creation_courses":
 		course_number = await db.get_number_of_created_courses(tg_id=tg_id)
 		subscription_data = await db.get_subscription_data()
