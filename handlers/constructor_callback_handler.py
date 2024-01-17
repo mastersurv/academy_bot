@@ -742,25 +742,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		test_id = int(callback.split("_")[4])
 		test_question, right_answer = await db.get_test_question(course_id=course_id, module_id=module_id,
 		                                                         lesson_id=lesson_id, test_id=test_id)
-		test_answers_list = await db.get_test_answers(course_id=course_id, module_id=module_id, lesson_id=lesson_id,
-		                                              test_id=test_id)
-
-		keyboard = InlineKeyboardMarkup()
-		for elem in test_answers_list:
-			answer_id, answer_text = elem
-			keyboard.add(
-				InlineKeyboardButton(
-					text=answer_text,
-					callback_data=f"answer_{course_id}_{module_id}_{lesson_id}_{test_id}_{answer_id}"
-				)
-			)
-
-		keyboard.add(
-			InlineKeyboardButton(
-				text="Назад",
-				callback_data=f"lesson_{course_id}_{module_id}_{lesson_id}"
-			)
-		)
+		keyboard = await generate_multi_keyboard(course_id=course_id, module_id=module_id,
+		                                         lesson_id=lesson_id, test_id=test_id)
 
 		await bot.delete_message(
 			chat_id=chat,
@@ -799,9 +782,10 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 				text = el["text"]
 				callback_data = el["callback_data"]
 				# print(data, "DATA")
+				print(callback_data, right_answer)
 
-				if len(callback_data.split("_")) == 5 and callback_data.split("_")[5] == right_answer:
-					text = "✓ " + text
+				if len(callback_data.split("_")) == 6 and callback_data.split("_")[5] == right_answer:
+					text = "✅ " + text
 					is_right = True
 
 				else:

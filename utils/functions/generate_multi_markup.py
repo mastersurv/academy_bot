@@ -24,32 +24,46 @@ async def generate_multi_keyboard(course_id=None, module_id=None, lesson_id=None
 					return "К окончанию курса", f"finish_message_{course_id}_{module_id}_{lesson_id}"
 
 
-	if test_id is not None:
-		# Клавиатура для теста
+	if test_id:
+		test_answers_list = await db.get_test_answers(course_id=course_id, module_id=module_id, lesson_id=lesson_id,
+		                                              test_id=test_id)
+
+		keyboard = InlineKeyboardMarkup()
+		for i, (answer_id, answer_text) in enumerate(test_answers_list):
+			keyboard.add(
+				InlineKeyboardButton(
+					text=answer_text,
+					callback_data=f"answer_{course_id}_{module_id}_{lesson_id}_{test_id}_{i}"
+				)
+			)
+
 		keyboard.add(
 			InlineKeyboardButton(
-				text="Следующий вопрос",
-				callback_data=f"question_{test_id + 1}"
-			)
-		).add(
-			InlineKeyboardButton(
 				text="Назад",
-				callback_data=f"back_to_lesson_{lesson_id}"
+				callback_data=f"lesson_{course_id}_{module_id}_{lesson_id}"
 			)
 		)
+		return keyboard
 
-	if lesson_id is not None:
+	if lesson_id:
 		# Клавиатура для урока
 		has_next_lesson = await db.check_next_lesson(course_id, module_id, lesson_id)
 		has_next_module = await db.check_next_module(course_id, module_id)
 		test_id = await db.get_test_id_in_lesson(course_id, module_id, lesson_id)
-		if has_next_lesson:
+		if test_id:
+			keyboard.add(
+				InlineKeyboardButton(
+					text="Приступить к заданию",
+					callback_data=f"test_{course_id}_{module_id}_{lesson_id}_{test_id}"
+				)
+			)
+		elif has_next_lesson:
 			next_lesson_id = await db.get_next_lesson_in_module(course_id, module_id, lesson_id)
 			if next_lesson_id:
 				keyboard.add(
 					InlineKeyboardButton(
 					text="Следующий урок",
-						callback_data=f"lesson_{module_id}_{next_lesson_id}"
+						callback_data=f"lesson_{course_id}_{module_id}_{next_lesson_id}"
 					)
 				)
 
@@ -62,14 +76,6 @@ async def generate_multi_keyboard(course_id=None, module_id=None, lesson_id=None
 						callback_data=f"module_{course_id}_{next_module_id}"
 					)
 				)
-
-		if test_id:
-			keyboard.add(
-				InlineKeyboardButton(
-					text="Приступить к заданию",
-					callback_data=f"test_{course_id}_{module_id}_{lesson_id}_{test_id}"
-				)
-			)
 
 		keyboard.add(
 			InlineKeyboardButton(
