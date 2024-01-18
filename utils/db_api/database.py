@@ -797,17 +797,17 @@ class DataBase:
 		result = await self.execute_query(query, (course_id, module_id))
 		return result[0][0] if result else None
 
-	async def add_final_message(self, course_id, text=None, audio=None, photo=None, video=None, video_note=None,
-	                            document=None):
+	async def add_final_message(self, course_id, text=None, audio_id=None, photo_id=None, video_id=None, video_note_id=None,
+	                            document_id=None):
 		if self.conn is None:
 			await self.connect()
 
 		query = '''
 	        INSERT INTO final_message (course_id, text, audio, photo, video, video_note, document)
-	        VALUES (?, ?, ?, ?, ?, ?, ?, )
+	        VALUES (?, ?, ?, ?, ?, ?, ?)
 	    '''
 		await self.execute_query(query, (
-			course_id, text, audio, photo, video, video_note, document
+			course_id, text, audio_id, photo_id, video_id, video_note_id, document_id
 		))
 
 	async def update_final_message(self, course_id, text=None, audio=None, photo=None, video=None, video_note=None,
@@ -835,13 +835,32 @@ class DataBase:
 			await self.connect()
 
 		query = '''
-	        SELECT *
+	        SELECT text, audio, photo, video, video_note, document
 	        FROM final_message
 	        WHERE course_id = ?
 	    '''
 		result = await self.execute_query(query, (course_id,))
-
+		print(result)
 		if not result:
 			return None
 
 		return result[0]
+
+	async def get_lesson_name(self, course_id, module_id, lesson_id):
+		if self.conn is None:
+			await self.connect()
+
+		query = '''
+	        SELECT lesson_title
+	        FROM lessons
+	        WHERE course_id = ? AND module_id = ? AND lesson_id = ?
+	    '''
+		result = await self.execute_query(query, (course_id, module_id, lesson_id))
+
+		if not result:
+			return None
+
+		return result[0][0]
+
+
+

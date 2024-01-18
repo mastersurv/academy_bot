@@ -125,11 +125,12 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
 	elif callback.startswith("course_analytic"):
 		course_id = int(callback.split("_")[2])
-		filename = "СЕРГЕЙ ВСТАВЬ НАЗВАНИЕ ФАЙЛА.xlsx"
+		filename = "Как стать менеджером по продажам_аналитика.xlsx"
 		with open(filename, "rb") as excel_file:
 			await bot.send_document(
 				chat_id=chat,
-				document=excel_file.read()
+				document=excel_file.read(),
+				caption='Аналитика по курсу'
 			)
 
 	elif callback == "creation_courses":
@@ -798,9 +799,16 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 	elif callback.startswith("final_message_"):
 		course_id = int(callback.split("_")[2])
 		text, voice_id, photo_id, video_id, video_note_id, document_id = await db.get_final_message(course_id=course_id)
+		course_name = await db.get_course_name(course_id=course_id)
+
+		await bot.delete_message(
+			chat_id=chat,
+			message_id=m_id
+		)
 
 		await send_lesson(
 			bot=bot,
+			lesson_name=course_name,
 			chat_id=chat,
 			text=text,
 			audio=voice_id,

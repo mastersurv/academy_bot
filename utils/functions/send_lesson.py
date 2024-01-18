@@ -65,7 +65,7 @@ async def send_lesson(bot: Bot, chat_id, text, audio, photo, video, video_note, 
         try:
             funnel_message = await bot.send_message(
                 chat_id=chat_id,
-                text=f"<b>{lesson_name}</b>\n\n" + text,
+                text=text,
                 parse_mode="html",
                 reply_markup=markup,
                 disable_web_page_preview=True
