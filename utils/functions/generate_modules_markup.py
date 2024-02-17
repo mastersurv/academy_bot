@@ -13,7 +13,8 @@ async def generate_modules_keyboard(course_id: int, passing=None) -> InlineKeybo
         button = InlineKeyboardButton(text=f"{num + 1}. {module_name.title()}", callback_data=callback_data)
         keyboard.add(button)
 
-    end_callback = f"course_settings_{course_id}" if passing is None else f"course_{course_id}"
-    keyboard.add(InlineKeyboardButton("К настройке курса", callback_data=end_callback))
+    # end_callback = f"course_settings_{course_id}" if passing is None else f"course_{course_id}"
+    end_callback = "library"
+    keyboard.add(InlineKeyboardButton("Назад", callback_data=end_callback))
 
     return keyboard
