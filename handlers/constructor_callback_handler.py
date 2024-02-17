@@ -894,11 +894,11 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 				# print(data, "DATA")
 				print(callback_data, callback)
 
-				if len(callback_data.split("_")) == 6 and callback_data.split("_")[5] == right_answer and callback_data == callback:
+				if len(callback_data.split("_")) == 6 and callback_data.split("_")[5] == right_answer and callback_data == callback and callback_data[0] != "✅":
 					text = "✅ " + text
 					is_right = True
 
-				elif callback_data == callback:
+				elif callback_data == callback and callback_data[0] != "❌":
 					text = "❌ " + text
 
 				l_data.append(callback_data)
