@@ -444,13 +444,14 @@ class DataBase:
 		promocodes = [row[0] for row in result]
 		return promocodes
 
-	async def get_promocode(self, course_id):
+	async def get_course_promocode(self, course_id):
 		query = '''
 	            SELECT promocode
 	            FROM promocodes
 	            WHERE course_id = ?
 	        '''
 		result = await self.execute_query(query, (course_id,))
+		print(result)
 		promocodes = [row[0] for row in result]
 		return promocodes
 

@@ -8,6 +8,7 @@ from utils.functions.generate_courses_markup import generate_courses_keyboard
 from utils.functions.generate_modules_markup import generate_modules_keyboard
 from utils.functions.generate_lessons_markup import generate_lessons_keyboard
 from utils.functions.generate_created_courses_markup import generate_created_courses_keyboard
+from utils.functions.generate_courses_promocode_markup import generate_courses_promocode_keyboard
 from utils.functions.generate_course_settings_markup import generate_courses_settings_keyboard
 from utils.functions.generate_modules_settings_markup import generate_modules_settings_keyboard
 from utils.functions.generate_lessons_settings_markup import generate_lessons_settings_keyboard
@@ -791,6 +792,24 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			markup=keyboard
 		)
 
+	elif callback == 'courses_promocodes':
+		created_courses_keyboard = await generate_courses_promocode_keyboard(tg_id=tg_id)
+		text = "Выберите курс, чтобы получить промокод:"
+		try:
+			await bot.edit_message_text(
+				chat_id=chat,
+				text=text,
+				message_id=m_id,
+				reply_markup=created_courses_keyboard.add(
+					InlineKeyboardButton(
+						text="Назад",
+						callback_data="menu"
+					)
+				)
+			)
+		except:
+			pass
+
 	elif callback[:6] in ["course", "module"]:
 		course_id = int(callback.split("_")[1])
 
@@ -981,3 +1000,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			# 		message_id=m_id,
 			# 		reply_markup=i_mp
 			# 	)
+	elif callback.startswith('get_course_promo'):
+		course_id = int(callback.split("_")[3])
+		course_name = await db.get_course_name(course_id)
+

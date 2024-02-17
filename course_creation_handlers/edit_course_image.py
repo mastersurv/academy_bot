@@ -43,7 +43,7 @@ async def edit_course_image(message: Message, state: FSMContext):
 
             await bot.send_message(
                 chat_id=chat_id,
-                text=f"Вы успешно добавили курс - {course_name}\nВот промокод к курсу - ",
+                text=f"Вы успешно добавили курс - {course_name}\nВот промокод к курсу - {new_promocode}",
                 reply_markup=InlineKeyboardMarkup().add(
                     InlineKeyboardButton(
                         text="Продолжить настройку курса",
