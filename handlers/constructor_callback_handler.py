@@ -38,21 +38,23 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 	callback = call.data
 	m_id = call.message.message_id
 	print(callback)
+	# local_menu = menu
+	local_menu = admin_menu  # TODO убрать
 
 	if callback == "menu":
 		creators_ids = await db.get_creators_ids()
 		if tg_id in creators_ids:
-			menu = admin_menu
+			local_menu = admin_menu
 		try:
 			await bot.edit_message_text(
 				chat_id=chat,
 				message_id=m_id,
 				text="<b>Меню</b>",
 				parse_mode="html",
-				reply_markup=menu
+				reply_markup=local_menu
 			)
-		except:
-			pass
+		except Exception as e:
+			print(e)
 
 	elif callback == "library":
 		courses_ids = await db.get_courses_ids(tg_id=tg_id)
@@ -69,13 +71,25 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
 		else:
 			keyboard = await generate_courses_keyboard(courses_ids_list=courses_ids)
-			await bot.edit_message_text(
+			# await bot.edit_message_text(
+			# 	chat_id=chat,
+			# 	text="<b>Список ваших курсов:</b>",
+			# 	parse_mode="html",
+			# 	message_id=m_id,
+			# 	reply_markup=keyboard
+			# )
+			await bot.delete_message(
+				chat_id=chat,
+				message_id=m_id
+			)
+
+			await bot.send_message(
 				chat_id=chat,
 				text="<b>Список ваших курсов:</b>",
 				parse_mode="html",
-				message_id=m_id,
 				reply_markup=keyboard
 			)
+
 
 	elif callback == "get_course":
 		await MenuStates.promocode.set()
@@ -201,13 +215,19 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		text = f"Настройка вашего курса:\n<b>{course_name}</b>"
 
 		try:
-			await bot.edit_message_text(
-				chat_id=chat,
-				text=text,
-				parse_mode='html',
-				message_id=m_id,
+			await bot.delete_message(chat_id=chat, message_id=m_id)
+			await bot.send_message(
+				chat_id=chat, text=text,
+				parse_mode="html",
 				reply_markup=keyboard
 			)
+			# await bot.edit_message_text(
+			# 	chat_id=chat,
+			# 	text=text,
+			# 	parse_mode='html',
+			# 	message_id=m_id,
+			# 	reply_markup=keyboard
+			# )
 		except:
 			pass
 
