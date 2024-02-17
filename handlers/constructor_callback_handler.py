@@ -226,6 +226,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			chat_id=chat,
 			photo=course_image,
 			caption=text,
+			parse_mode="html",
 			reply_markup=InlineKeyboardMarkup().add(
 				InlineKeyboardButton(
 					text="Назад",
