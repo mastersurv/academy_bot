@@ -409,6 +409,28 @@ class DataBase:
 		users_ids = await self.execute_query(query)
 		return [row[0] for row in users_ids]
 
+	async def add_user(self, tg_id, full_name):
+		# Проверяем, существует ли пользователь с таким tg_id
+		existing_user = await self.get_user_by_id(tg_id)
+
+		# Если пользователь уже существует, пропускаем добавление
+		if existing_user:
+			return
+
+		# Иначе выполняем вставку нового пользователя
+		query = '''
+	        INSERT INTO users (tg_id, full_name)
+	        VALUES (?, ?)
+	    '''
+		await self.execute_query(query, (tg_id, full_name))
+
+	async def get_user_by_id(self, tg_id):
+		query = '''
+	        SELECT * FROM users WHERE tg_id = ?
+	    '''
+		result = await self.execute_query(query, (tg_id,))
+		return result
+
 	async def get_number_of_created_courses(self, tg_id):
 		query = '''
 	            SELECT COUNT(*) as num_created_courses
