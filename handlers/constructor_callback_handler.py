@@ -58,7 +58,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			print(e)
 
 	elif callback == "library":
-		courses_ids = await db.get_courses_ids(tg_id=tg_id)
+		# courses_ids = await db.get_courses_ids(tg_id=tg_id)
+		courses_ids = await db.get_user_courses(tg_id=tg_id)
 		if len(courses_ids) == 0:
 			try:
 				await bot.edit_message_text(
@@ -67,8 +68,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 					message_id=m_id,
 					reply_markup=to_menu
 				)
-			except:
-				pass
+			except Exception as e:
+				print(e)
 
 		else:
 			keyboard = await generate_courses_keyboard(courses_ids_list=courses_ids)

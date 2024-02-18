@@ -44,6 +44,7 @@ class MyBot:
         users = await self.db.get_users_ids()
         keyboard = menu
         # keyboard = admin_menu  # TODO убрать
+        # Если юзер подписчик канала - у него кнопки админа
 
         creators_ids = await self.db.get_creators_ids()
         if tg_id in creators_ids:

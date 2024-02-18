@@ -358,11 +358,10 @@ class DataBase:
 
 	async def get_promocodes_dict(self):
 		query = '''
-	            SELECT course_id FROM courses
-				WHERE promocode = ?
+	            SELECT promocode, course_id
+	            FROM courses
 	        '''
 		promocodes_info = await self.execute_query(query)
-		print(promocodes_info)
 		promocodes_dict = {row[0]: row[1] for row in promocodes_info}
 		return promocodes_dict
 
@@ -467,11 +466,25 @@ class DataBase:
 		return [row[0] for row in result]
 
 	async def add_user_course(self, tg_id, course_id):
+		# Проверяем, существует ли уже запись с таким tg_id и course_id
 		query = '''
-	            INSERT INTO user_courses (tg_id, course_id)
-	            VALUES (?, ?)
-	        '''
-		await self.execute_query(query, (tg_id, course_id))
+		        SELECT COUNT(*)
+		        FROM user_courses
+		        WHERE tg_id = ? AND course_id = ?
+		    '''
+		result = await self.execute_query(query, (tg_id, course_id))
+		count = result[0][0] if result else 0
+
+		# Если запись уже существует, не добавляем её заново
+		if count > 0:
+			return
+
+		# Иначе добавляем новую запись
+		insert_query = '''
+		        INSERT INTO user_courses (tg_id, course_id)
+		        VALUES (?, ?)
+		    '''
+		await self.execute_query(insert_query, (tg_id, course_id))
 
 	async def add_promocode(self, promocode, course_id):
 		query = '''
@@ -479,6 +492,22 @@ class DataBase:
 	        VALUES (?, ?)
 	    '''
 		await self.execute_query(query, (promocode, course_id))
+
+	async def get_promocode(self, course_id):
+		if self.conn is None:
+			await self.connect()
+
+		query = '''
+	        SELECT promocode
+	        FROM courses
+	        WHERE course_id = ?
+	    '''
+
+		result = await self.execute_query(query, (course_id,))
+		if result:
+			return result[0][0]  # Возвращаем промокод, если он есть
+		else:
+			return None  # Возвращаем None, если курс с указанным course_id не найден
 
 	async def add_test_question(self, course_id, module_id, lesson_id, test_id, test_question, right_answer):
 		if self.conn is None:
@@ -562,6 +591,7 @@ class DataBase:
 			)
 			if not existing_promocodes:
 				return promocode
+
 
 	# Запросы для курсов, модулей, уроков
 	async def get_course_info(self, course_id):
