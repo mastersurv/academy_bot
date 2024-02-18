@@ -358,10 +358,11 @@ class DataBase:
 
 	async def get_promocodes_dict(self):
 		query = '''
-	            SELECT promocode, course_id
-	            FROM promocodes
+	            SELECT course_id FROM courses
+				WHERE promocode = ?
 	        '''
 		promocodes_info = await self.execute_query(query)
+		print(promocodes_info)
 		promocodes_dict = {row[0]: row[1] for row in promocodes_info}
 		return promocodes_dict
 
@@ -447,13 +448,14 @@ class DataBase:
 	async def get_course_promocode(self, course_id):
 		query = '''
 	            SELECT promocode
-	            FROM promocodes
+	            FROM courses
 	            WHERE course_id = ?
 	        '''
 		result = await self.execute_query(query, (course_id,))
-		print(result)
 		promocodes = [row[0] for row in result]
-		return promocodes
+		if promocodes:
+			return promocodes[0]
+		return None
 
 	async def get_user_courses(self, tg_id):
 		query = '''

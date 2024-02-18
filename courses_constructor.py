@@ -42,8 +42,8 @@ class MyBot:
         username = message.from_user.username
 
         users = await self.db.get_users_ids()
-        # keyboard = menu
-        keyboard = admin_menu  # TODO убрать
+        keyboard = menu
+        # keyboard = admin_menu  # TODO убрать
 
         creators_ids = await self.db.get_creators_ids()
         if tg_id in creators_ids:

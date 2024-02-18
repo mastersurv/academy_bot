@@ -39,8 +39,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 	callback = call.data
 	m_id = call.message.message_id
 	print(callback)
-	# local_menu = menu
-	local_menu = admin_menu  # TODO убрать
+	local_menu = menu
+	# local_menu = admin_menu  # TODO убрать
 
 	if callback == "menu":
 		creators_ids = await db.get_creators_ids()
@@ -97,7 +97,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		try:
 			await bot.edit_message_text(
 				chat_id=chat,
-				text="Чтобы получить доступ к курсам, у вас должен быть промокод, отправьте его нам и по кнопке 'Мои курсы' у вас появятся курсы",
+				text="Чтобы получить доступ к курсам, у вас должен быть промокод, отправьте его нам и по кнопке 'Библиотека' у вас появятся курсы",
 				message_id=m_id,
 				reply_markup=to_menu
 			)
@@ -807,8 +807,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 					)
 				)
 			)
-		except:
-			pass
+		except Exception as e:
+			print(e)
 
 	elif callback[:6] in ["course", "module"]:
 		course_id = int(callback.split("_")[1])
@@ -1003,4 +1003,23 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 	elif callback.startswith('get_course_promo'):
 		course_id = int(callback.split("_")[3])
 		course_name = await db.get_course_name(course_id)
-
+		promocode = await db.get_course_promocode(course_id)
+		text = (f'<b>{course_name}</b>\n\n'
+		        f'Промокод для курса: {promocode}\n\n'
+		        f'Для выдачи пользователю доступа к курсу отправьте ему данный промокод, '
+		        f'он должен перейти в меню и выбрать «Получить курс», после чего ему будет выдан доступ')
+		try:
+			await bot.edit_message_text(
+				chat_id=chat,
+				text=text,
+				parse_mode='html',
+				message_id=m_id,
+				reply_markup=InlineKeyboardMarkup().add(
+					InlineKeyboardButton(
+						text="Назад",
+						callback_data="courses_promocodes"
+					)
+				)
+			)
+		except Exception as e:
+			print(e)

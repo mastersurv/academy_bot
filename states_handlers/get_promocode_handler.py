@@ -12,6 +12,7 @@ async def get_promocode_handler(message: Message, state: FSMContext):
     tg_id = message.from_user.id
     promocode = message.text # TODO сделать генерацию промокодом при добавлении курса
     promocodes_dict = await db.get_promocodes_dict()
+    print(promocodes_dict)
     m_id = message.message_id
 
     try:
