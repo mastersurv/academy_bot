@@ -15,6 +15,8 @@ from utils.functions.generate_lessons_settings_markup import generate_lessons_se
 from utils.functions.generate_multi_markup import generate_multi_keyboard
 
 from utils.functions.send_lesson import send_lesson
+from config import channel_id, group_id, easycourses_channel
+
 
 from states_handlers.states import SettingsStates, MenuStates
 from blanks.bot_markup import (
@@ -43,8 +45,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 	# local_menu = admin_menu  # TODO убрать
 
 	if callback == "menu":
-		creators_ids = await db.get_creators_ids()
-		if tg_id in creators_ids:
+		is_member = await bot.get_chat_member(easycourses_channel, tg_id)
+		if is_member.status == "member" or is_member.status == "creator" or is_member.status == "administrator":
 			local_menu = admin_menu
 		try:
 			await bot.edit_message_text(
@@ -114,12 +116,13 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		try:
 			await bot.edit_message_text(
 				chat_id=chat,
-				text="Мы видим ваши сообщения в наш чат, задавайте вопросы в любое время и мы вам ответим",
+				text="Отправьте сообщение с вашим вопросом, далее нажмите кнопку <b>Меню</b> для возвращения",
+				parse_mode='html',
 				message_id=m_id,
 				reply_markup=to_menu
 			)
-		except:
-			pass
+		except Exception as e:
+			print(e)
 
 	elif callback == "courses_analytics":
 		analytics_keyboard = await generate_created_courses_keyboard(tg_id=tg_id, analytics=True)
@@ -162,8 +165,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 				message_id=m_id,
 				reply_markup=course_creation
 			)
-		except:
-			pass
+		except Exception as e:
+			print(e)
 
 	elif callback == "created_courses":
 		created_courses_keyboard = await generate_created_courses_keyboard(tg_id=tg_id)
@@ -180,8 +183,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 					)
 				)
 			)
-		except:
-			pass
+		except Exception as e:
+			print(e)
 
 	elif callback == "create_course":
 		course_number = await db.get_number_of_created_courses(tg_id=tg_id)
@@ -207,8 +210,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 				message_id=m_id,
 				reply_markup=to_course_creation
 			)
-		except:
-			pass
+		except Exception as e:
+			print(e)
 
 	elif callback[:15] == "course_settings":
 		course_id = int(callback.split("_")[2])
@@ -248,6 +251,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			chat_id=chat,
 			photo=course_image,
 			caption=text,
+			parse_mode='html',
 			reply_markup=InlineKeyboardMarkup().add(
 				InlineKeyboardButton(
 					text="Назад",
@@ -300,7 +304,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		async with state.proxy() as data:
 			data["course_id"] = course_id
 
-		text = "Отправьте финальное сообщение, это сообщение пользователи будут видеть, когда продут весь последний урок курса.\n" \
+		text = "Отправьте финальное сообщение, это сообщение пользователи будут видеть, когда пройдут весь последний урок курса.\n" \
+				"После отправки можете вернуться к настройке курса\n" \
 			   "Доступные форматы:\n" \
 			   "1) Текст (поддерживается форматирование)\n" \
 			   "2) Фото\n" \

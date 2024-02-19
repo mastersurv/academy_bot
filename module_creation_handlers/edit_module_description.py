@@ -37,7 +37,9 @@ async def edit_module_description(message: Message, state: FSMContext):
 
             await bot.send_message(
                 chat_id=chat_id,
-                text="Отправьте превью модуля\n(банер, плакат, аватар):",
+                text="Отправьте превью модуля\n(банер, плакат, аватар):"
+                     "\n\n<b>Важно:</b> Для сохранения модуля завершите данный шаг",
+	            parse_mode='html',
                 reply_markup=keyboard
             )
             await SettingsStates.module_image.set()

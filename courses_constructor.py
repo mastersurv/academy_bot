@@ -44,8 +44,6 @@ class MyBot:
 		if not username:
 			username = full_name
 
-		# Вызов метода добавления пользователя
-		await self.db.add_user(tg_id, full_name)
 		users = await self.db.get_users_ids()
 		keyboard = menu
 		# keyboard = admin_menu  # TODO убрать
@@ -66,6 +64,8 @@ class MyBot:
 		)
 
 		if tg_id not in users:
+			# Вызов метода добавления пользователя
+			await self.db.add_user(tg_id, full_name)
 			try:
 				await self.dp.bot.send_message(
 					chat_id=channel_id, text=f"Чат с пользователем @{username}",
@@ -81,6 +81,7 @@ class MyBot:
 				print(e)
 
 	async def text_handler(self, message: Message, state: FSMContext):
+		print(message)
 		tg_id = message.from_user.id
 		m_id = message.message_id
 		chat_type = message.chat.type
@@ -95,8 +96,8 @@ class MyBot:
 							message_id=message.reply_to_message.message_id,
 						)
 					)
-			except Exception:
-				pass
+			except Exception as e:
+				print(e)
 
 		elif chat_type == "private":
 			try:
@@ -109,7 +110,7 @@ class MyBot:
 				await self.db.add_user_message(tg_id=tg_id, message_id=message_to_chat.message_id)
 
 			except Exception as e:
-				pass
+				print(e)
 
 	def register_handlers(self):
 		self.dp.register_message_handler(callback=self.start_handler, commands=["start"], state="*")
@@ -144,7 +145,7 @@ class MyBot:
 		                                 content_types=["text"])
 		self.dp.register_message_handler(callback=test_keyboard_handler, state=SettingsStates.test_keyboard,
 		                                 content_types=["text"])
-		self.dp.register_message_handler(callback=self.text_handler, state="*", content_types=["photo"])
+		self.dp.register_message_handler(callback=self.text_handler, state="*", content_types=["text"])
 
 	def run(self):
 		self.register_handlers()
