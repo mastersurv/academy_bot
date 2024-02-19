@@ -11,11 +11,6 @@ async def generate_lessons_settings_keyboard(course_id: int, module_id: int, les
         )
     ).add(
         InlineKeyboardButton(
-            text="Изменить описание урока",
-            callback_data=f"edit_lesson_description_{course_id}_{module_id}_{lesson_id}"
-        )
-    ).add(
-        InlineKeyboardButton(
             text="Изменить материал урока",
             callback_data=f"edit_lesson_material_{course_id}_{module_id}_{lesson_id}"
         )

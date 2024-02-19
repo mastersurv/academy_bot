@@ -82,8 +82,8 @@ async def edit_lesson_material(message: Message, state: FSMContext):
                 parse_mode="html",
                 reply_markup=InlineKeyboardMarkup().add(
                     InlineKeyboardButton(
-                        text="Назад",
-                        callback_data=f"lesson_settings_{course_id}_{module_id}"
+                        text="К настройке урока",
+                        callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
                     )
                 )
             )

@@ -745,33 +745,22 @@ class DataBase:
 	        '''
 		await self.execute_query(query, (new_image, course_id, module_id, lesson_id))
 
-	async def update_lesson_materials(self, course_id, module_id, lesson_id, materials):
-		valid_materials = {
-			'audio': 'audio',
-			'photo': 'photo',
-			'video': 'video',
-			'video_note': 'video_note',
-			'document': 'document',
-			'document_name': 'document_name'
-		}
-
-		update_query = 'UPDATE lessons SET '
-
-		for key, field in valid_materials.items():
-			if key in materials and materials[key] is not None:
-				update_query += f'{field} = ?, '
-
-		# Удаляем последнюю запятую и пробел
-		update_query = update_query.rstrip(', ')
-
-		update_query += ' WHERE course_id = ? AND module_id = ? AND lesson_id = ?'
-
-		# Собираем значения для запроса
-		values = [materials[key] for key in valid_materials if key in materials and materials[key] is not None]
-		values.extend([course_id, module_id, lesson_id])
-
+	async def update_lesson_material(self, course_id, module_id, lesson_id, text, audio_id, photo_id, video_id, video_note_id, document_id):
+		update_query = """
+			UPDATE lessons
+			SET text = ?,
+			audio = ?,
+			photo = ?,
+			video = ?,
+			video_note = ?,
+			document = ?
+			WHERE course_id = ?
+			AND module_id = ?
+			AND lesson_id = ?
+			
+		"""
 		# Выполняем запрос
-		await self.execute_query(update_query, values)
+		await self.execute_query(update_query, (text, audio_id, photo_id, video_id, video_note_id, document_id, course_id, module_id, lesson_id))
 
 	async def get_test_question(self, course_id, module_id, lesson_id, test_id):
 		if self.conn is None:
@@ -926,6 +915,19 @@ class DataBase:
 			return None
 
 		return result[0][0]
+
+	async def update_lesson_name(self, course_id, module_id, lesson_id, lesson_name):
+		if self.conn is None:
+			await self.connect()
+
+		query = """
+			UPDATE lessons
+			SET lesson_title = ?
+			WHERE course_id = ?
+			AND module_id = ?
+			AND lesson_id = ?
+		"""
+		await self.execute_query(query, (lesson_name, course_id, module_id, lesson_id))
 
 
 

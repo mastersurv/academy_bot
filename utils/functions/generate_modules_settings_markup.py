@@ -21,7 +21,7 @@ async def generate_modules_settings_keyboard(course_id: int, module_id: int) -> 
         )
     ).add(
         InlineKeyboardButton(
-            text="Посмотреть демо модуля (как будет выглядеть для пользователя)",
+            text="Посмотреть демо модуля",
             callback_data=f"check_demo_module_{course_id}_{module_id}"
         )
     ).add(

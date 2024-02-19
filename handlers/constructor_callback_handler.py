@@ -491,16 +491,18 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		lesson_name = lesson_name[0]
 		text = f"Настройка вашего урока:\n<b>{lesson_name}</b>"
 
-		try:
-			await bot.edit_message_text(
-				chat_id=chat,
-				text=text,
-				parse_mode='html',
-				message_id=m_id,
-				reply_markup=keyboard
-			)
-		except:
-			pass
+		await bot.delete_message(
+			chat_id=chat,
+			message_id=m_id
+		)
+
+		await bot.send_message(
+			chat_id=chat,
+			text=text,
+			parse_mode='html',
+			reply_markup=keyboard
+		)
+
 
 	elif callback[:10] == "add_lesson":
 		course_id = int(callback.split("_")[2])
@@ -541,20 +543,6 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			data["module_id"] = module_id
 			data["lesson_id"] = lesson_id
 
-		try:
-			await bot.edit_message_reply_markup(
-				chat_id=chat,
-				message_id=m_id,
-				reply_markup=InlineKeyboardMarkup().add(
-					InlineKeyboardButton(
-						text="К настройке урока",
-						callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
-					)
-				)
-			)
-		except:
-			pass
-
 		text = "Отправьте материал к уроку, доступные форматы:\n" \
 		       "1) Текст (поддерживается форматирование)\n" \
 		       "2) Фото\n" \
@@ -571,7 +559,13 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 				chat_id=chat,
 				text=text,
 				message_id=m_id,
-				parse_mode="html"
+				parse_mode="html",
+				reply_markup=InlineKeyboardMarkup().add(
+					InlineKeyboardButton(
+						text="К настройке урока",
+						callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
+					)
+				)
 			)
 		except:
 			pass
@@ -587,36 +581,28 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			data["module_id"] = module_id
 			data["lesson_id"] = lesson_id
 
-		try:
-			await bot.edit_message_reply_markup(
-				chat_id=chat,
-				message_id=m_id,
-				reply_markup=InlineKeyboardMarkup().add(
-					InlineKeyboardButton(
-						text="К настройке урока",
-						callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
-					)
-				)
-			)
-		except:
-			pass
-
 		text = "Текст"
 		if mode == "name":
-			lesson_name = await db.get_lesson_name(course_id=course_id, module_id=module_id)
+			lesson_name = await db.get_lesson_name(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
 			text = f"Введите новое название урока.\nНынешнее название: <b>{lesson_name}</b>"
 			await SettingsStates.lesson_name.set()
-		elif mode == "description":
-			lesson_description = await db.get_lesson_description(course_id=course_id, module_id=module_id)
-			text = f"Введите новое описание урока.\nНынешнее описание: <pre>{lesson_description}</pre>"
-			await SettingsStates.lesson_description.set()
+		# elif mode == "description":
+		# 	lesson_description = await db.get_lesson_description(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
+		# 	text = f"Введите новое описание урока.\nНынешнее описание: <pre>{lesson_description}</pre>"
+		# 	await SettingsStates.lesson_description.set()
 
 		try:
 			await bot.edit_message_text(
 				chat_id=chat,
 				text=text,
 				message_id=m_id,
-				parse_mode="html"
+				parse_mode="html",
+				reply_markup=InlineKeyboardMarkup().add(
+					InlineKeyboardButton(
+						text="К настройке урока",
+						callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
+					)
+				)
 			)
 		except:
 			pass
@@ -920,50 +906,23 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			reply_markup=i_mp
 		)
 
-			# if text == test_question:
-			# 	for l_el in cd:
-			# 		for el in l_el:
-			#
-			# 			text = el["text"]
-			# 			callback_data = el["callback_data"]
-			# 			# print(data, "DATA")
-			# 			if callback_data.split("_")[5] == right_answer:
-			# 				text = "✓ " + text
-			# 				is_right = True
-			#
-			# 			else:
-			# 				text = "крестик " + text
-			#
-			# 			l_data.append(callback_data)
-			# 			l_text.append(text)
-			#
-			# 	# print(l_text, l_data)
-			# 	next_text, next_button = await generate_multi_keyboard(course_id=course_id, module_id=module_id,
-			# 	                                                       lesson_id=lesson_id, test_id=test_id,
-			# 	                                                       answer=True)
-			#
-			# 	i_mp = InlineKeyboardMarkup()
-			# 	count = 0
-			# 	for text, ca in zip(l_text, l_data):
-			# 		if is_right and len(l_data) - count - 1 == 0:
-			# 			i_mp.add(
-			# 				InlineKeyboardButton(
-			# 					text=next_text,
-			# 					callback_data=next_button
-			# 				)
-			# 			)
-			# 		else:
-			# 			i_mp.add(
-			# 				InlineKeyboardButton(
-			# 					text=text,
-			# 					callback_data=ca
-			# 				)
-			# 			)
-			#
-			# 		count += 1
-			#
-			# 	await bot.edit_message_reply_markup(
-			# 		chat_id=chat,
-			# 		message_id=m_id,
-			# 		reply_markup=i_mp
-			# 	)
+	elif callback.startswith("finish_message_"):
+		course_id = callback.split("_")[0]
+
+		text, voice_id, photo_id, video_id, video_note_id, document_id = await db.get_final_message(course_id=course_id)
+		await send_lesson(
+			chat_id=chat,
+			text=text,
+			audio=voice_id,
+			photo=photo_id,
+			video=video_id,
+			video_note=video_note_id,
+			document=document_id,
+			markup=InlineKeyboardMarkup().add(
+				InlineKeyboardButton(
+					text="К началу курса",
+					callback_data=f"course_{course_id}"
+				)
+			)
+		)
+
