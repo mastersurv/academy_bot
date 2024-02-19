@@ -41,6 +41,11 @@ async def edit_course_image(message: Message, state: FSMContext):
                 promocode=new_promocode
             )
 
+            await db.add_final_message(
+                course_id=course_id,
+                text="Финальное сообщение"
+            )
+
             await bot.send_message(
                 chat_id=chat_id,
                 text=f"Вы успешно добавили курс - {course_name}\nВот промокод к курсу - {new_promocode}",

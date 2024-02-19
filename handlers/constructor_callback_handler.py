@@ -45,16 +45,18 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		creators_ids = await db.get_creators_ids()
 		if tg_id in creators_ids:
 			local_menu = admin_menu
-		try:
-			await bot.edit_message_text(
+
+		await bot.delete_message(
+			chat_id=chat,
+			message_id=m_id
+		)
+
+		await bot.send_message(
 				chat_id=chat,
-				message_id=m_id,
 				text="<b>Меню</b>",
 				parse_mode="html",
 				reply_markup=local_menu
 			)
-		except Exception as e:
-			print(e)
 
 	elif callback == "library":
 		courses_ids = await db.get_courses_ids(tg_id=tg_id)
