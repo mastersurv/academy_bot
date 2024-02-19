@@ -46,11 +46,6 @@ admin_menu = InlineKeyboardMarkup().add(
     )
 ).add(
     InlineKeyboardButton(
-        text="Аналитика курсов",
-        callback_data="courses_analytics"
-    )
-).add(
-    InlineKeyboardButton(
         text="Промокоды",
         callback_data="courses_promocodes"
     )
@@ -60,6 +55,12 @@ admin_menu = InlineKeyboardMarkup().add(
         callback_data="ask_question"
     )
 )
+# ).add(  # TODO вернуть в лучшие времена
+#     InlineKeyboardButton(
+#         text="Аналитика курсов",
+#         callback_data="courses_analytics"
+#     )
+# )
 
 
 course_creation = InlineKeyboardMarkup().add(

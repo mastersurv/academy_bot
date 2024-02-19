@@ -29,7 +29,9 @@ async def edit_course_description(message: Message, state: FSMContext):
 
             await bot.send_message(
                 chat_id=chat_id,
-                text="Отправьте превью курса\n(банер, плакат, аватар):",
+                text="Отправьте превью курса\n(банер, плакат, аватар):"
+                     "\n\n<b>Важно:</b> Для сохранения курса завершите данный шаг",
+	            parse_mode='html',
                 reply_markup=to_course_creation
             )
             await SettingsStates.course_image.set()

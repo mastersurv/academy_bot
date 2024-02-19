@@ -13,7 +13,7 @@ async def files_ids(message, bot):
             text = message.html_text
 
     elif message.voice:
-        voice_id = message.voice[-1].file_id
+        voice_id = message.voice.file_id
 
     elif message.video:
         video_id = message.video.file_id

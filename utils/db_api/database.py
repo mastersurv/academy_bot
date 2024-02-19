@@ -359,7 +359,7 @@ class DataBase:
 	async def get_promocodes_dict(self):
 		query = '''
 	            SELECT promocode, course_id
-	            FROM promocodes
+	            FROM courses
 	        '''
 		promocodes_info = await self.execute_query(query)
 		promocodes_dict = {row[0]: row[1] for row in promocodes_info}
@@ -409,6 +409,28 @@ class DataBase:
 		users_ids = await self.execute_query(query)
 		return [row[0] for row in users_ids]
 
+	async def add_user(self, tg_id, full_name):
+		# Проверяем, существует ли пользователь с таким tg_id
+		existing_user = await self.get_user_by_id(tg_id)
+
+		# Если пользователь уже существует, пропускаем добавление
+		if existing_user:
+			return
+
+		# Иначе выполняем вставку нового пользователя
+		query = '''
+	        INSERT INTO users (tg_id, full_name)
+	        VALUES (?, ?)
+	    '''
+		await self.execute_query(query, (tg_id, full_name))
+
+	async def get_user_by_id(self, tg_id):
+		query = '''
+	        SELECT * FROM users WHERE tg_id = ?
+	    '''
+		result = await self.execute_query(query, (tg_id,))
+		return result
+
 	async def get_number_of_created_courses(self, tg_id):
 		query = '''
 	            SELECT COUNT(*) as num_created_courses
@@ -444,15 +466,17 @@ class DataBase:
 		promocodes = [row[0] for row in result]
 		return promocodes
 
-	async def get_promocode(self, course_id):
+	async def get_course_promocode(self, course_id):
 		query = '''
 	            SELECT promocode
-	            FROM promocodes
+	            FROM courses
 	            WHERE course_id = ?
 	        '''
 		result = await self.execute_query(query, (course_id,))
 		promocodes = [row[0] for row in result]
-		return promocodes
+		if promocodes:
+			return promocodes[0]
+		return None
 
 	async def get_user_courses(self, tg_id):
 		query = '''
@@ -464,11 +488,25 @@ class DataBase:
 		return [row[0] for row in result]
 
 	async def add_user_course(self, tg_id, course_id):
+		# Проверяем, существует ли уже запись с таким tg_id и course_id
 		query = '''
-	            INSERT INTO user_courses (tg_id, course_id)
-	            VALUES (?, ?)
-	        '''
-		await self.execute_query(query, (tg_id, course_id))
+		        SELECT COUNT(*)
+		        FROM user_courses
+		        WHERE tg_id = ? AND course_id = ?
+		    '''
+		result = await self.execute_query(query, (tg_id, course_id))
+		count = result[0][0] if result else 0
+
+		# Если запись уже существует, не добавляем её заново
+		if count > 0:
+			return
+
+		# Иначе добавляем новую запись
+		insert_query = '''
+		        INSERT INTO user_courses (tg_id, course_id)
+		        VALUES (?, ?)
+		    '''
+		await self.execute_query(insert_query, (tg_id, course_id))
 
 	async def add_promocode(self, promocode, course_id):
 		query = '''
@@ -476,6 +514,22 @@ class DataBase:
 	        VALUES (?, ?)
 	    '''
 		await self.execute_query(query, (promocode, course_id))
+
+	async def get_promocode(self, course_id):
+		if self.conn is None:
+			await self.connect()
+
+		query = '''
+	        SELECT promocode
+	        FROM courses
+	        WHERE course_id = ?
+	    '''
+
+		result = await self.execute_query(query, (course_id,))
+		if result:
+			return result[0][0]  # Возвращаем промокод, если он есть
+		else:
+			return None  # Возвращаем None, если курс с указанным course_id не найден
 
 	async def add_test_question(self, course_id, module_id, lesson_id, test_id, test_question, right_answer):
 		if self.conn is None:
@@ -559,6 +613,7 @@ class DataBase:
 			)
 			if not existing_promocodes:
 				return promocode
+
 
 	# Запросы для курсов, модулей, уроков
 	async def get_course_info(self, course_id):

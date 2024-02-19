@@ -246,7 +246,6 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			chat_id=chat,
 			photo=course_image,
 			caption=text,
-			parse_mode="html",
 			reply_markup=InlineKeyboardMarkup().add(
 				InlineKeyboardButton(
 					text="Назад",
@@ -894,11 +893,11 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 				# print(data, "DATA")
 				print(callback_data, callback)
 
-				if len(callback_data.split("_")) == 6 and callback_data.split("_")[5] == right_answer and callback_data == callback and callback_data[0] != "✅":
+				if len(callback_data.split("_")) == 6 and callback_data.split("_")[5] == right_answer and callback_data == callback:
 					text = "✅ " + text
 					is_right = True
 
-				elif callback_data == callback and callback_data[0] != "❌":
+				elif callback_data == callback:
 					text = "❌ " + text
 
 				l_data.append(callback_data)
