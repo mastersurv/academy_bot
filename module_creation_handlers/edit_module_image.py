@@ -60,7 +60,7 @@ async def edit_module_image(message: Message, state: FSMContext):
 
             await bot.send_message(
                 chat_id=chat_id,
-                text=f"Новая аватарка курса успешно установлена",
+                text=f"Новая аватарка модуля успешно установлена",
                 parse_mode="html",
                 reply_markup=InlineKeyboardMarkup().add(
                     InlineKeyboardButton(

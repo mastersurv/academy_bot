@@ -33,7 +33,7 @@ async def test_question_handler(message: Message, state: FSMContext):
              "ВАЖНО: обязательно каждый отдельный ответ с красной строки",
         reply_markup=InlineKeyboardMarkup().add(
             InlineKeyboardButton(
-                text="К настройкам курса",
+                text="К настройкам урока",
                 callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
             )
         )

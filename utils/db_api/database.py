@@ -82,7 +82,7 @@ class DataBase:
 
 		await self.execute_query('''
             CREATE TABLE IF NOT EXISTS modules (
-                module_id INT PRIMARY KEY,
+                module_id INT,
                 course_id INT REFERENCES courses(course_id),
                 module_name TEXT,
                 module_description TEXT,
@@ -92,8 +92,8 @@ class DataBase:
 
 		await self.execute_query('''
             CREATE TABLE IF NOT EXISTS lessons (
-                lesson_id INT PRIMARY KEY,
-                module_id INT REFERENCES modules(module_id),
+                lesson_id INT,
+                module_id INT,
                 course_id INT REFERENCES courses(course_id),
                 lesson_title TEXT,
                 lesson_description TEXT,
@@ -202,10 +202,11 @@ class DataBase:
 
 		await self.execute_query(
 			"""
-			INSERT OR REPLACE INTO users_messages
-			VALUES(?, ?)
+			UPDATE users_posts
+			SET message_id = ?
+			WHERE tg_id = ?
 			""",
-			(tg_id, message_id)
+			(message_id, tg_id)
 		)
 
 	async def add_bot(self, bot_token: str, tg_id: int):
@@ -634,6 +635,15 @@ class DataBase:
 		result = await self.execute_query(query, (course_id, module_id))
 		return result[0] if result else None
 
+	async def get_module_description(self, course_id, module_id):
+		query = '''
+	        SELECT module_description
+	        FROM modules
+	        WHERE course_id = ? AND module_id = ?
+	    '''
+		result = await self.execute_query(query, (course_id, module_id))
+		return result[0][0] if result else None
+
 	async def get_lesson_info(self, course_id, module_id, lesson_id):
 		query = '''
 	        SELECT lesson_title, text, audio, photo, video, video_note, document
@@ -711,21 +721,21 @@ class DataBase:
 	        '''
 		await self.execute_query(query, (new_description, course_id, module_id, lesson_id))
 
-	async def update_course_image(self, course_id, new_image):
+	async def update_course_image(self, course_id, image_file_id):
 		query = '''
 	            UPDATE courses
 	            SET course_image_id = ?
 	            WHERE course_id = ?
 	        '''
-		await self.execute_query(query, (new_image, course_id))
+		await self.execute_query(query, (image_file_id, course_id))
 
-	async def update_module_image(self, course_id, module_id, new_image):
+	async def update_module_image(self, course_id, module_id, image_file_id):
 		query = '''
 	            UPDATE modules
 	            SET module_image = ?
 	            WHERE course_id = ? AND module_id = ?
 	        '''
-		await self.execute_query(query, (new_image, course_id, module_id))
+		await self.execute_query(query, (image_file_id, course_id, module_id))
 
 	async def update_lesson_image(self, course_id, module_id, lesson_id, new_image):
 		query = '''

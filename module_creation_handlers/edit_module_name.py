@@ -46,7 +46,7 @@ async def edit_module_name(message: Message, state: FSMContext):
 
             await bot.send_message(
                 chat_id=chat_id,
-                text=f"Новое название модуля: <br>{module_name}</br> успешно установлено",
+                text=f"Новое название модуля: <b>{module_name}</b> успешно установлено",
                 parse_mode="html",
                 reply_markup=InlineKeyboardMarkup().add(
                     InlineKeyboardButton(

@@ -10,7 +10,7 @@ async def generate_courses_promocode_keyboard(tg_id: int) -> InlineKeyboardMarku
     for num, course_id in enumerate(courses_ids):
         course_name = await db.get_course_name(course_id=course_id)
         callback_data = f'get_course_promo_{course_id}'
-        button = InlineKeyboardButton(f"{num + 1}. {course_name.title()}", callback_data=callback_data)
+        button = InlineKeyboardButton(f"{num + 1}. {course_name}", callback_data=callback_data)
         keyboard.add(button)
 
     return keyboard
