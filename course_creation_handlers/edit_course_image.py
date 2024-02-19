@@ -65,7 +65,8 @@ async def edit_course_image(message: Message, state: FSMContext):
                 chat_id=chat_id,
                 text=f"Новая аватарка курса успешно установлена",
                 parse_mode="html",
-                reply_markup=back_to_settings
-            )
+                reply_markup=InlineKeyboardMarkup().add(
+					InlineKeyboardButton(text='Назад', callback_data=f'course_settings_{course_id}'))
+			)
 
             await SettingsStates.settings.set()

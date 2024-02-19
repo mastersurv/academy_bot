@@ -267,36 +267,29 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		async with state.proxy() as data:
 			data["course_id"] = course_id
 
-		try:
-			await bot.edit_message_reply_markup(
-				chat_id=chat,
-				message_id=m_id,
-				reply_markup=back_to_settings
-			)
-		except:
-			pass
-
 		text = "Текст"
 		if mode == "name":
 			course_name = await db.get_course_name(course_id=course_id)
-			text = f"Введите новое название курса.\nНынешнее название: <br>{course_name}</br>"
+			text = f"Введите новое название курса или вернитесь назад.\nНынешнее название: <b>{course_name}</b>"
 			await SettingsStates.course_name.set()
 		elif mode == "description":
 			course_description = await db.get_course_description(course_id=course_id)
-			text = f"Введите новое описание курса.\nНынешнее описание: <pre>{course_description}</pre>"
+			text = f"Введите новое описание курса или вернитесь назад.\nНынешнее описание: <pre>{course_description}</pre>"
 			await SettingsStates.course_description.set()
 		elif mode == "image":
-			text = f"Отправьте в бота новую аватарку курса."
+			text = f"Отправьте в бота новую аватарку курса или вернитесь назад."
 			await SettingsStates.course_image.set()
 		try:
 			await bot.edit_message_text(
 				chat_id=chat,
 				text=text,
 				message_id=m_id,
-				parse_mode="html"
+				parse_mode="html",
+				reply_markup=InlineKeyboardMarkup().add(
+					InlineKeyboardButton(text='Назад', callback_data=f'course_settings_{course_id}'))
 			)
-		except:
-			pass
+		except Exception as e:
+			print(e)
 
 	elif callback.startswith("edit_final_message_"):
 		course_id = int(callback.split("_")[3])
@@ -416,10 +409,24 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			data["course_id"] = course_id
 			data["module_id"] = module_id
 
+		text = "Текст"
+		if mode == "name":
+			module_name = await db.get_module_name(course_id=course_id, module_id=module_id)
+			text = f"Введите новое название модуля или вернитесь назад.\nНынешнее название: <b>{module_name}</b>"
+			await SettingsStates.module_name.set()
+		elif mode == "description":
+			module_description = await db.get_module_description(course_id=course_id, module_id=module_id)
+			text = f"Введите новое описание модуля или вернитесь назад.\nНынешнее описание: <pre>{module_description}</pre>"
+			await SettingsStates.module_description.set()
+		elif mode == "image":
+			text = f"Отправьте в бота новую аватарку модуля или вернитесь назад."
+			await SettingsStates.module_image.set()
 		try:
-			await bot.edit_message_reply_markup(
+			await bot.edit_message_text(
 				chat_id=chat,
+				text=text,
 				message_id=m_id,
+				parse_mode="html",
 				reply_markup=InlineKeyboardMarkup().add(
 					InlineKeyboardButton(
 						text="К настройке модуля",
@@ -429,28 +436,6 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			)
 		except Exception as e:
 			print(e)
-
-		text = "Текст"
-		if mode == "name":
-			module_name = await db.get_module_name(course_id=course_id)
-			text = f"Введите новое название модуля.\nНынешнее название: <br>{module_name}</br>"
-			await SettingsStates.module_name.set()
-		elif mode == "description":
-			module_description = await db.get_module_description(course_id=course_id)
-			text = f"Введите новое описание модуля.\nНынешнее описание: <pre>{module_description}</pre>"
-			await SettingsStates.module_description.set()
-		elif mode == "image":
-			text = f"Отправьте в бота новую аватарку модуля."
-			await SettingsStates.module_image.set()
-		try:
-			await bot.edit_message_text(
-				chat_id=chat,
-				text=text,
-				message_id=m_id,
-				parse_mode="html"
-			)
-		except:
-			pass
 
 	elif callback[:17] == "check_demo_module":
 		course_id = int(callback.split("_")[3])
@@ -626,7 +611,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		text = "Текст"
 		if mode == "name":
 			lesson_name = await db.get_lesson_name(course_id=course_id, module_id=module_id)
-			text = f"Введите новое название урока.\nНынешнее название: <br>{lesson_name}</br>"
+			text = f"Введите новое название урока.\nНынешнее название: <b>{lesson_name}</b>"
 			await SettingsStates.lesson_name.set()
 		elif mode == "description":
 			lesson_description = await db.get_lesson_description(course_id=course_id, module_id=module_id)
@@ -918,11 +903,12 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 				# print(data, "DATA")
 				print(callback_data, callback)
 
-				if len(callback_data.split("_")) == 6 and callback_data.split("_")[5] == right_answer and callback_data == callback:
+				if (len(callback_data.split("_")) == 6 and callback_data.split("_")[5] == right_answer
+						and callback_data == callback and text[0] != '✅' and text[0] != '❌'):
 					text = "✅ " + text
 					is_right = True
 
-				elif callback_data == callback:
+				elif callback_data == callback and text[0] != '❌' and text[0] != '✅':
 					text = "❌ " + text
 
 				l_data.append(callback_data)

@@ -8,7 +8,7 @@ async def test_keyboard_handler(message: Message, state: FSMContext):
     bot, db = get_bot_and_db()
     chat_id = message.chat.id
     m_id = message.message_id
-    test_keyboard = list(map(lambda x: x.strip().lower().title(), message.text.split("\n")))
+    test_keyboard = list(map(lambda x: x.strip().lower().capitalize(), message.text.split("\n")))
 
     try:
         await bot.edit_message_reply_markup(

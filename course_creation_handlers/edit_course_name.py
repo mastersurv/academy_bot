@@ -1,5 +1,5 @@
 from utils.functions.get_bot_and_db import get_bot_and_db
-from aiogram.types import Message, InlineKeyboardMarkup
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.dispatcher.dispatcher import FSMContext
 from states_handlers.states import SettingsStates
 from blanks.bot_markup import back_to_settings, to_course_creation
@@ -39,9 +39,10 @@ async def edit_course_name(message: Message, state: FSMContext):
 
             await bot.send_message(
                 chat_id=chat_id,
-                text=f"Новое название курса: <br>{course_name}</br> успешно установлено",
+                text=f"Новое название курса: <b>{course_name}</b> успешно установлено",
                 parse_mode="html",
-                reply_markup=back_to_settings
-            )
+                reply_markup=InlineKeyboardMarkup().add(
+					InlineKeyboardButton(text='Назад', callback_data=f'course_settings_{course_id}'))
+			)
 
             await SettingsStates.settings.set()

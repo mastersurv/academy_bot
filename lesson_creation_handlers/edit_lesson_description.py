@@ -56,7 +56,7 @@ async def edit_lesson_description(message: Message, state: FSMContext):
 
             await bot.send_message(
                 chat_id=chat_id,
-                text=f"Новое описание урока: <br>{lesson_description}</br> успешно установлено",
+                text=f"Новое описание урока: <b>{lesson_description}</b> успешно установлено",
                 parse_mode="html",
                 reply_markup=InlineKeyboardMarkup().add(
                     InlineKeyboardButton(

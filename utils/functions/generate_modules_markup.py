@@ -10,11 +10,11 @@ async def generate_modules_keyboard(course_id: int, passing=None) -> InlineKeybo
     for num, module_tuple in enumerate(modules):
         module_id, module_name = module_tuple
         callback_data = f'module_{course_id}_{module_id}' if passing else f'module_settings_{course_id}_{module_id}'
-        button = InlineKeyboardButton(text=f"{num + 1}. {module_name.title()}", callback_data=callback_data)
+        button = InlineKeyboardButton(text=f"{num + 1}. {module_name}", callback_data=callback_data)
         keyboard.add(button)
 
-    # end_callback = f"course_settings_{course_id}" if passing is None else f"course_{course_id}"
-    end_callback = "library"
+    end_callback = f"course_settings_{course_id}" if passing is None else f"course_{course_id}"
+    # end_callback = "library"
     keyboard.add(InlineKeyboardButton("Назад", callback_data=end_callback))
 
     return keyboard

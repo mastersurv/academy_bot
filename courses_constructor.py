@@ -145,7 +145,7 @@ class MyBot:
 		                                 content_types=["text"])
 		self.dp.register_message_handler(callback=test_keyboard_handler, state=SettingsStates.test_keyboard,
 		                                 content_types=["text"])
-		self.dp.register_message_handler(callback=self.text_handler, state="*", content_types=["text"])
+		self.dp.register_message_handler(callback=self.text_handler, state="*", content_types=ContentTypes.ANY)
 
 	def run(self):
 		self.register_handlers()
