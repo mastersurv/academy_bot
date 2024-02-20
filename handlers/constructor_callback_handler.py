@@ -625,10 +625,11 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		await bot.edit_message_text(
 			chat_id=chat,
 			message_id=m_id,
-			text="Введите вопрос для тестового задания",
+			text="ВНИМАНИЕ - если вы ввели некорректно вопрос или ответы к вопросу, то после ввода вопроса и ответов, "
+			     "вам будет предложено пересоздать тест либо перейти дальше\n\nВведите вопрос:",
 			reply_markup=InlineKeyboardMarkup().add(
 				InlineKeyboardButton(
-					text="К настройкам курса",
+					text="К настройкам урока",
 					callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
 				)
 			)
@@ -652,7 +653,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			test_question = data["test_question"]
 			test_keyboard = data["test_keyboard"]
 
-		new_test_id = await db.get_test_numbers(course_id=course_id, module_id=module_id, lesson_id=lesson_id) + 1
+		new_test_id = await db.get_test_numbers(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
 		await db.add_test_question(course_id=course_id, module_id=module_id, lesson_id=lesson_id, test_id=new_test_id,
 		                           test_question=test_question, right_answer=right_answer)
 		for num, answer in enumerate(test_keyboard):
@@ -676,7 +677,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 				)
 			).add(
 				InlineKeyboardButton(
-					text="Изменить ответ",
+					text="Создать тест заново",
 					callback_data=f"edit_test_answer_{new_test_id}_{course_id}_{module_id}_{lesson_id}"
 				)
 			).add(
@@ -694,28 +695,21 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		lesson_id = int(callback.split("_")[6])
 
 		await db.delete_test_question(course_id=course_id, module_id=module_id, lesson_id=lesson_id, test_id=test_id)
-		await db.delete_test_answer(course_id=course_id, module_id=module_id, lesson_id=lesson_id, test_id=test_id)
-
-		async with state.proxy() as data:
-			test_question = data["test_question"]
-			test_keyboard = data["test_keyboard"]
-
-		keyboard = InlineKeyboardMarkup()
-		for num, elem in enumerate(test_keyboard):
-			keyboard.add(
-				InlineKeyboardButton(
-					text=elem,
-					callback_data=f"choose_answer_{num}_{course_id}_{module_id}_{lesson_id}"
-				)
-			)
 
 		await bot.edit_message_text(
 			chat_id=chat,
 			message_id=m_id,
-			text=f"Выберите ВЕРНЫЙ вариант ответа.\n<b>{test_question}</b>",
-			parse_mode="html",
-			reply_markup=keyboard
+			text="ВНИМАНИЕ - если вы ввели некорректно вопрос или ответы к вопросу, то после ввода вопроса и ответов, "
+			     "вам будет предложено пересоздать тест либо перейти дальше\n\nВведите вопрос:",
+			reply_markup=InlineKeyboardMarkup().add(
+				InlineKeyboardButton(
+					text="К настройкам урока",
+					callback_data=f"lesson_settings_{course_id}_{module_id}_{lesson_id}"
+				)
+			)
 		)
+
+		await SettingsStates.test_question.set()
 
 	elif callback[:17] == "check_demo_lesson" or callback[:6] == "lesson":
 		if callback[:6] == "lesson":
@@ -837,6 +831,11 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 					text="В начало курса",
 					callback_data=f"course_{course_id}"
 				)
+			).add(
+				InlineKeyboardButton(
+					text="В главное меню",
+					callback_data="menu"
+				)
 			)
 		)
 
@@ -847,6 +846,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		test_id = int(callback.split("_")[4])
 		test_question, right_answer = await db.get_test_question(course_id=course_id, module_id=module_id,
 		                                                         lesson_id=lesson_id, test_id=test_id)
+		print(test_question)
 		keyboard = await generate_multi_keyboard(course_id=course_id, module_id=module_id,
 		                                         lesson_id=lesson_id, test_id=test_id)
 

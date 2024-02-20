@@ -111,7 +111,7 @@ class DataBase:
                 course_id INT REFERENCES courses(course_id),
                 module_id INT REFERENCES modules(module_id),
                 lesson_id INT REFERENCES lessons(lesson_id),
-                test_id INT PRIMARY KEY,
+                test_id INT,
                 test_question TEXT,
                 right_answer TEXT
             )
@@ -268,11 +268,20 @@ class DataBase:
 		if self.conn is None:
 			await self.connect()
 
-		query = '''
-            INSERT INTO test_answers (course_id, module_id, lesson_id, test_id, answer_num, answer)
-            VALUES (?, ?, ?, ?, ?, ?)
-        '''
-		await self.execute_query(query, (course_id, module_id, lesson_id, test_id, answer_num, answer))
+		existing_record = await self.execute_query('''
+		        SELECT *
+		        FROM test_answers
+		        WHERE course_id = ? AND module_id = ? AND lesson_id = ? AND test_id = ? AND answer_num = ?
+		    ''', (course_id, module_id, lesson_id, test_id, answer_num))
+
+		if existing_record:
+			print("Запись уже существует в таблице test_answers")
+		else:
+			query = '''
+		            INSERT INTO test_answers (course_id, module_id, lesson_id, test_id, answer_num, answer)
+		            VALUES (?, ?, ?, ?, ?, ?)
+		        '''
+			await self.execute_query(query, (course_id, module_id, lesson_id, test_id, answer_num, answer))
 
 	async def delete_test_question(self, course_id, module_id, lesson_id, test_id):
 		if self.conn is None:
@@ -554,7 +563,7 @@ class DataBase:
         '''
 		result = await self.execute_query(query, (course_id, module_id, lesson_id))
 
-		return result[0][0] + 1 if result else 1
+		return result[0][0] if result else 1
 
 	async def get_subscription_status(self, tg_id):
 		if self.conn is None:
@@ -856,13 +865,21 @@ class DataBase:
 		if self.conn is None:
 			await self.connect()
 
-		query = '''
-	        INSERT OR REPLACE INTO final_message (course_id, text, audio, photo, video, video_note, document)
-	        VALUES (?, ?, ?, ?, ?, ?, ?)
-	    '''
-		await self.execute_query(query, (
-			course_id, text, audio_id, photo_id, video_id, video_note_id, document_id
-		))
+		existing_record = await self.execute_query('SELECT course_id FROM final_message WHERE course_id = ?',
+		                                           (course_id,))
+		if existing_record:
+			query = '''
+		            UPDATE final_message
+		            SET text = ?, audio = ?, photo = ?, video = ?, video_note = ?, document = ?
+		            WHERE course_id = ?
+		        '''
+			await self.execute_query(query, (text, audio_id, photo_id, video_id, video_note_id, document_id, course_id))
+		else:
+			query = '''
+		            INSERT INTO final_message (course_id, text, audio, photo, video, video_note, document)
+		            VALUES (?, ?, ?, ?, ?, ?, ?)
+		        '''
+			await self.execute_query(query, (course_id, text, audio_id, photo_id, video_id, video_note_id, document_id))
 
 	async def update_final_message(self, course_id, text=None, audio=None, photo=None, video=None, video_note=None,
 	                               document=None):

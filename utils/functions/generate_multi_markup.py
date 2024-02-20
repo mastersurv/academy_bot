@@ -9,7 +9,7 @@ async def generate_multi_keyboard(course_id=None, module_id=None, lesson_id=None
 	if answer:
 		test_number = await db.get_test_numbers(course_id=course_id, module_id=module_id, lesson_id=lesson_id)
 		if test_id < test_number:
-			return "Далее", f"next_{test_id + 1}"
+			return "Далее", f"test_{course_id}_{module_id}_{lesson_id}_{test_id + 1}"
 		else:
 			lesson_number = await db.get_lessons_numbers(course_id=course_id, module_id=module_id)
 			if lesson_id < lesson_number:
@@ -50,7 +50,8 @@ async def generate_multi_keyboard(course_id=None, module_id=None, lesson_id=None
 		has_next_lesson = await db.check_next_lesson(course_id, module_id, lesson_id)
 		has_next_module = await db.check_next_module(course_id, module_id)
 		test_id = await db.get_test_id_in_lesson(course_id, module_id, lesson_id)
-		if test_id:
+		print(test_id)
+		if test_id is not None:
 			keyboard.add(
 				InlineKeyboardButton(
 					text="Приступить к заданию",
