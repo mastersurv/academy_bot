@@ -479,6 +479,22 @@ class DataBase:
 			return promocodes[0]
 		return None
 
+	async def get_promocode(self, course_id):
+		if self.conn is None:
+			await self.connect()
+
+		query = '''
+	        SELECT promocode
+	        FROM courses
+	        WHERE course_id = ?
+	    '''
+
+		result = await self.execute_query(query, (course_id,))
+		if result:
+			return result[0][0]  # Возвращаем промокод, если он есть
+		else:
+			return None  # Возвращаем None, если курс с указанным course_id не найден
+
 	async def get_user_courses(self, tg_id):
 		query = '''
 	            SELECT course_id
@@ -515,22 +531,6 @@ class DataBase:
 	        VALUES (?, ?)
 	    '''
 		await self.execute_query(query, (promocode, course_id))
-
-	async def get_promocode(self, course_id):
-		if self.conn is None:
-			await self.connect()
-
-		query = '''
-	        SELECT promocode
-	        FROM courses
-	        WHERE course_id = ?
-	    '''
-
-		result = await self.execute_query(query, (course_id,))
-		if result:
-			return result[0][0]  # Возвращаем промокод, если он есть
-		else:
-			return None  # Возвращаем None, если курс с указанным course_id не найден
 
 	async def add_test_question(self, course_id, module_id, lesson_id, test_id, test_question, right_answer):
 		if self.conn is None:
@@ -857,7 +857,7 @@ class DataBase:
 			await self.connect()
 
 		query = '''
-	        INSERT INTO final_message (course_id, text, audio, photo, video, video_note, document)
+	        INSERT OR REPLACE INTO final_message (course_id, text, audio, photo, video, video_note, document)
 	        VALUES (?, ?, ?, ?, ?, ?, ?)
 	    '''
 		await self.execute_query(query, (
@@ -894,6 +894,7 @@ class DataBase:
 	        WHERE course_id = ?
 	    '''
 		result = await self.execute_query(query, (course_id,))
+		print(course_id)
 		print(result)
 		if not result:
 			return None

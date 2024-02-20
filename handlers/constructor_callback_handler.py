@@ -9,11 +9,13 @@ from utils.functions.generate_modules_markup import generate_modules_keyboard
 from utils.functions.generate_lessons_markup import generate_lessons_keyboard
 from utils.functions.generate_created_courses_markup import generate_created_courses_keyboard
 from utils.functions.generate_course_settings_markup import generate_courses_settings_keyboard
+from utils.functions.generate_courses_promocode_markup import generate_courses_promocode_keyboard
 from utils.functions.generate_modules_settings_markup import generate_modules_settings_keyboard
 from utils.functions.generate_lessons_settings_markup import generate_lessons_settings_keyboard
 from utils.functions.generate_multi_markup import generate_multi_keyboard
 
 from utils.functions.send_lesson import send_lesson
+from config import easycourses_channel
 
 from states_handlers.states import SettingsStates, MenuStates
 from blanks.bot_markup import (
@@ -38,12 +40,11 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 	callback = call.data
 	m_id = call.message.message_id
 	print(callback)
-	# local_menu = menu
-	local_menu = admin_menu  # TODO убрать
+	local_menu = menu
 
 	if callback == "menu":
-		creators_ids = await db.get_creators_ids()
-		if tg_id in creators_ids:
+		is_member = await bot.get_chat_member(easycourses_channel, tg_id)
+		if is_member.status == "member" or is_member.status == "creator" or is_member.status == "administrator":
 			local_menu = admin_menu
 
 		await bot.delete_message(
@@ -59,7 +60,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			)
 
 	elif callback == "library":
-		courses_ids = await db.get_courses_ids(tg_id=tg_id)
+		# courses_ids = await db.get_courses_ids(tg_id=tg_id)
+		courses_ids = await db.get_user_courses(tg_id=tg_id)
 		if len(courses_ids) == 0:
 			try:
 				await bot.edit_message_text(
@@ -68,8 +70,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 					message_id=m_id,
 					reply_markup=to_menu
 				)
-			except:
-				pass
+			except Exception as e:
+				print(e)
 
 		else:
 			keyboard = await generate_courses_keyboard(courses_ids_list=courses_ids)
@@ -247,6 +249,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		await bot.send_photo(
 			chat_id=chat,
 			photo=course_image,
+			parse_mode='html',
 			caption=text,
 			reply_markup=InlineKeyboardMarkup().add(
 				InlineKeyboardButton(
@@ -764,6 +767,24 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			markup=keyboard
 		)
 
+	elif callback == 'courses_promocodes':
+		created_courses_keyboard = await generate_courses_promocode_keyboard(tg_id=tg_id)
+		text = "Выберите курс, чтобы получить промокод:"
+		try:
+			await bot.edit_message_text(
+				chat_id=chat,
+				text=text,
+				message_id=m_id,
+				reply_markup=created_courses_keyboard.add(
+					InlineKeyboardButton(
+						text="Назад",
+						callback_data="menu"
+					)
+				)
+			)
+		except Exception as e:
+			print(e)
+
 	elif callback[:6] in ["course", "module"]:
 		course_id = int(callback.split("_")[1])
 
@@ -788,6 +809,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			photo=image_id,
 			reply_markup=keyboard
 		)
+
+
 
 	elif callback.startswith("final_message_"):
 		course_id = int(callback.split("_")[2])
@@ -909,10 +932,15 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		)
 
 	elif callback.startswith("finish_message_"):
-		course_id = callback.split("_")[0]
+		course_id = callback.split("_")[2]
 
 		text, voice_id, photo_id, video_id, video_note_id, document_id = await db.get_final_message(course_id=course_id)
+		await bot.delete_message(
+			chat_id=chat,
+			message_id=m_id
+		)
 		await send_lesson(
+			bot=bot,
 			chat_id=chat,
 			text=text,
 			audio=voice_id,
@@ -925,6 +953,28 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 					text="К началу курса",
 					callback_data=f"course_{course_id}"
 				)
+			).add(
+				InlineKeyboardButton(
+					text="В главное меню",
+					callback_data="menu"
+				)
 			)
 		)
+
+	elif callback.startswith('get_course_promo'):
+		course_id = int(callback.split("_")[3])
+		course_name = await db.get_course_name(course_id)
+		promo_code = await db.get_promocode(course_id)
+
+		message_text = f"<b>{course_name}</b>\nПромокод для курса: {promo_code}\n\n" \
+		               "Для выдачи пользователю доступа к курсу отправьте ему данный промокод." \
+		               "Он должен перейти в меню и выбрать 'Получить курс'." \
+		               "После этого ему будет выдан доступ."
+
+		# Создаем Inline Keyboard Markup с кнопкой "Назад"
+		keyboard = InlineKeyboardMarkup()
+		keyboard.add(InlineKeyboardButton(text="Назад", callback_data="courses_promocodes"))
+
+		# Отправляем сообщение пользователю
+		await bot.edit_message_text(chat_id=chat, text=message_text, message_id=m_id, parse_mode='html', reply_markup=keyboard)
 

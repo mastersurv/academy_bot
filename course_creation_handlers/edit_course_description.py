@@ -1,5 +1,5 @@
 from utils.functions.get_bot_and_db import get_bot_and_db
-from aiogram.types import Message, InlineKeyboardMarkup
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.dispatcher.dispatcher import FSMContext
 from states_handlers.states import SettingsStates
 from blanks.bot_markup import back_to_settings, to_course_creation
