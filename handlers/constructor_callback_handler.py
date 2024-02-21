@@ -849,7 +849,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		print(test_question)
 		keyboard = await generate_multi_keyboard(course_id=course_id, module_id=module_id,
 		                                         lesson_id=lesson_id, test_id=test_id)
-
+		print(keyboard)
 		await bot.delete_message(
 			chat_id=chat,
 			message_id=m_id
