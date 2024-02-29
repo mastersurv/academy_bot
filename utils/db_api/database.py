@@ -65,7 +65,10 @@ class DataBase:
 		await self.execute_query('''
 		    CREATE TABLE IF NOT EXISTS promocodes (
 		            promocode TEXT PRIMARY KEY,
-					course_id INT REFERENCES courses(course_id)
+					course_id INT REFERENCES courses(course_id),
+					chat_name TEXT,
+					usages_left INT,
+					chat_id INT
 		        )
 		    ''')
 
@@ -494,7 +497,7 @@ class DataBase:
 
 		query = '''
 	        SELECT promocode
-	        FROM courses
+	        FROM promocodes
 	        WHERE course_id = ?
 	    '''
 
@@ -534,12 +537,12 @@ class DataBase:
 		    '''
 		await self.execute_query(insert_query, (tg_id, course_id))
 
-	async def add_promocode(self, promocode, course_id):
+	async def add_promocode(self, promocode, course_id,  chat_name=None, usages_left=None, chat_id=None):
 		query = '''
-	        INSERT OR REPLACE INTO promocodes (promocode, course_id)
-	        VALUES (?, ?)
+	        INSERT OR REPLACE INTO promocodes (promocode, course_id, chat_name, usages_left, chat_id)
+	        VALUES (?, ?, ?, ?, ?)
 	    '''
-		await self.execute_query(query, (promocode, course_id))
+		await self.execute_query(query, (promocode, course_id, chat_name, usages_left, chat_id))
 
 	async def add_test_question(self, course_id, module_id, lesson_id, test_id, test_question, right_answer):
 		if self.conn is None:

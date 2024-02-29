@@ -12,15 +12,16 @@ menu = InlineKeyboardMarkup().add(
     )
 ).add(
     InlineKeyboardButton(
-        text="Купить подписку",
-        callback_data="buy_subscription"
-    )
-).add(
-    InlineKeyboardButton(
         text="Задать вопрос",
         callback_data="ask_question"
     )
 )
+# ).add(
+#     InlineKeyboardButton(
+#         text="Купить подписку",
+#         callback_data="buy_subscription"
+#     )
+# )
 
 to_menu = InlineKeyboardMarkup().add(
     InlineKeyboardButton(
