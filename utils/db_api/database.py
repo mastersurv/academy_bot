@@ -950,5 +950,63 @@ class DataBase:
 		"""
 		await self.execute_query(query, (lesson_name, course_id, module_id, lesson_id))
 
+	async def minus_usage(self, promocode):
 
+		result = await self.execute_query('''
+	        SELECT usages_left
+	        FROM promocodes
+	        WHERE promocode = ?
+	    ''', (promocode,))
 
+		if result:
+			current_usages_left = result[0][0]
+			if current_usages_left > 0:
+				new_usages_left = current_usages_left - 1
+
+				# Обновляем значение в базе данных
+				await self.execute_query('''
+	                UPDATE promocodes
+	                SET usages_left = ?
+	                WHERE promocode = ?
+	            ''', (new_usages_left, promocode))
+
+				return True  # Операция успешно выполнена
+			else:
+				return False  # Нет доступных использований
+		else:
+			return False  # Промокод не найден
+
+	async def is_n_promo(self, promocode):
+		result = await self.execute_query('''
+	        SELECT usages_left
+	        FROM promocodes
+	        WHERE promocode = ?
+	    ''', (promocode,))
+
+		if result:
+			usages_left = result[0][0]
+			if usages_left is not None:
+				return True
+			else:
+				return False
+		else:
+			return False  # Промокод не найден
+
+	async def is_group_promo(self, promocode):
+
+		# Получаем информацию о промокоде
+		result = await self.execute_query('''
+	        SELECT chat_id
+	        FROM promocodes
+	        WHERE promocode = ?
+	    ''', (promocode,))
+
+		if result:
+			promo_chat_id = result[0][0]
+			# Проверяем, есть ли у промокода чат
+			if promo_chat_id is not None:
+				return True
+			else:
+				return False
+		else:
+			return False  # Промокод не найден
