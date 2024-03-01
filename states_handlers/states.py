@@ -3,6 +3,8 @@ from aiogram.dispatcher.filters.state import StatesGroup, State
 
 class MenuStates(StatesGroup):
     promocode = State()
+    n_promo = State()
+    group_promo = State()
     ask_question = State()
 
 
