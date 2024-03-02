@@ -964,9 +964,23 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 	elif callback.startswith('get_course_promo'):
 		course_id = int(callback.split("_")[3])
 		course_name = await db.get_course_name(course_id)
-		promo_code = await db.get_promocode(course_id)
+		promo_code = await db.get_promocode(course_id, permanent=True)
 
-		message_text = f"<b>{course_name}</b>\nПромокод для курса: {promo_code}\n\n" \
+		another_promo_list = await db.get_promocode(course_id=course_id) # TODO вернуть список кортежей из promocode/usage_left/chat_id/chat_name
+		promo_text = f"<b>{course_name}</b>\nПостоянный промокод для курса: {promo_code}\n"
+
+		if another_promo_list:
+			for elem in another_promo_list:
+				custom_promo, usage_left, chat_id, chat_name = elem
+				if usage_left and usage_left > 0:
+					promo_text += f"{custom_promo} - использований осталось: {usage_left}\n"
+				elif chat_id:
+					promo_text += f"{custom_promo} - прокомод, привязанный к группе: {course_name.lower().capitalize()}\n"
+
+		promo_text += "\n"
+
+
+		message_text = f"{promo_text}" \
 		               "Для выдачи пользователю доступа к курсу отправьте ему данный промокод." \
 		               "Он должен перейти в меню и выбрать 'Получить курс'." \
 		               "После этого ему будет выдан доступ."
@@ -1008,7 +1022,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		await bot.send_message(
 			chat_id=tg_id,
 			text="Добавьте бота в группу, к которой хотите привязать промокод, сделайте его админом и напишите команду /set_group.\n"
-				 "Или вернитесь назад",
+				 "Или вернитесь назад.\n"
+				 "ВАЖНО: чат должен быть группой или супергруппой, иначе бот не привяжется",
 			reply_markup=InlineKeyboardMarkup().add(
 				InlineKeyboardButton(
 					text="Назад",
@@ -1017,5 +1032,17 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			)
 		)
 
-	# TODO пусть n promo -> введите количество использований промокодов -> генерация -> проверка, является ли n
-	# TODO обработка команды /set_grouppro
+	elif callback.startswith("set_group"):
+		course_id = int(callback.split("_")[2])
+
+		new_promo = await db.generate_unique_promocode(course_id=course_id)
+		chat_name = call.message.chat.title # TODO сделать проверку при тесте
+		print("Ctrl + F - set_group, тут chat_name, должен соответствовать названию группы, куда добавили")
+
+		await db.add_promocode(
+			course_id=course_id,
+			promocode=new_promo,
+			chat_id=chat,
+			chat_name=chat_name
+		)
+
