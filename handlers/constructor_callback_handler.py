@@ -40,12 +40,13 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 	callback = call.data
 	m_id = call.message.message_id
 	print(callback)
-	local_menu = menu
+	# local_menu = menu
+	local_menu = admin_menu  # TODO убрать
 
 	if callback == "menu":
-		is_member = await bot.get_chat_member(easycourses_channel, tg_id)
-		if is_member.status == "member" or is_member.status == "creator" or is_member.status == "administrator":
-			local_menu = admin_menu
+		# is_member = await bot.get_chat_member(easycourses_channel, tg_id)
+		# if is_member.status == "member" or is_member.status == "creator" or is_member.status == "administrator":
+		# 	local_menu = admin_menu
 
 		await bot.delete_message(
 			chat_id=chat,

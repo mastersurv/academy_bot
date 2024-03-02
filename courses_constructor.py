@@ -49,15 +49,15 @@ class MyBot:
 
 		users = await self.db.get_users_ids()
 		keyboard = menu
-		# keyboard = admin_menu  # TODO убрать
+		keyboard = admin_menu  # TODO убрать
 		# Если юзер подписчик канала - у него кнопки админа
-		is_member = await self.bot.get_chat_member(easycourses_channel, tg_id)
+		# is_member = await self.bot.get_chat_member(easycourses_channel, tg_id)
 
 		# creators_ids = await self.db.get_creators_ids()
 		# if tg_id in creators_ids:
 		#     keyboard = admin_menu
-		if is_member.status == "member" or is_member.status == "creator" or is_member.status == "administrator":
-			keyboard = admin_menu
+		# if is_member.status == "member" or is_member.status == "creator" or is_member.status == "administrator":
+		# 	keyboard = admin_menu
 
 		await self.bot.send_message(
 			chat_id=chat,

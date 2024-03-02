@@ -1010,3 +1010,53 @@ class DataBase:
 				return False
 		else:
 			return False  # Промокод не найден
+
+	async def get_usage_remain(self, promocode):
+
+		result = await self.execute_query('''
+	        SELECT usages_left
+	        FROM promocodes
+	        WHERE promocode = ?
+	    ''', (promocode,))
+
+		if result:
+			usages_left = result[0][0]
+			return usages_left
+		else:
+			return None  # Промокод не найден
+
+	async def get_creator_id(self, course_id):
+
+		result = await self.execute_query('''
+	        SELECT owner_id
+	        FROM courses
+	        WHERE course_id = ?
+	    ''', (course_id,))
+
+		# Проверка наличия результата запроса
+		if result:
+			creator_id = result[0][0]
+			return creator_id
+		else:
+			return None
+
+	async def delete_promocode(self, promocode):
+
+		await self.execute_query('''
+	        DELETE FROM promocodes
+	        WHERE promocode = ?
+	    ''', (promocode,))
+
+	async def get_chat_id_and_title(self, promocode):
+
+		result = await self.execute_query('''
+	        SELECT chat_id, chat_name
+	        FROM promocodes
+	        WHERE promocode = ?
+	    ''', (promocode,))
+
+		if not result:
+			return None, None
+
+		return result[0]
+
