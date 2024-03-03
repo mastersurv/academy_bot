@@ -378,6 +378,26 @@ class DataBase:
 		promocodes_dict = {row[0]: row[1] for row in promocodes_info}
 		return promocodes_dict
 
+	async def get_n_promocodes_dict(self):
+		query = '''
+	        SELECT promocode, course_id
+	        FROM promocodes
+	        WHERE usages_left IS NOT NULL
+	    '''
+		promocodes_info = await self.execute_query(query)
+		promocodes_dict = {row[0]: row[1] for row in promocodes_info}
+		return promocodes_dict
+
+	async def get_chat_promocodes_dict(self):
+		query = '''
+	        SELECT promocode, course_id
+	        FROM promocodes
+	        WHERE chat_id IS NOT NULL
+	    '''
+		promocodes_info = await self.execute_query(query)
+		promocodes_dict = {row[0]: row[1] for row in promocodes_info}
+		return promocodes_dict
+
 	async def add_course_to_user(self, tg_id, course_id):
 		current_courses_ids = await self.get_courses_ids(tg_id)
 
@@ -491,21 +511,29 @@ class DataBase:
 			return promocodes[0]
 		return None
 
-	async def get_promocode(self, course_id):
-		if self.conn is None:
-			await self.connect()
-
-		query = '''
-	        SELECT promocode
-	        FROM promocodes
-	        WHERE course_id = ?
-	    '''
-
-		result = await self.execute_query(query, (course_id,))
-		if result:
-			return result[0][0]  # Возвращаем промокод, если он есть
+	async def get_promocode(self, course_id, permanent=None):
+		if permanent:
+			query = '''
+		            SELECT promocode
+		            FROM courses
+		            WHERE course_id = ?
+		        '''
+			result = await self.execute_query(query, (course_id,))
+			if result:
+				return result[0][0]  # Возвращаем промокод, если он есть
+			else:
+				return None  # Возвращаем None, если промокод не найден
 		else:
-			return None  # Возвращаем None, если курс с указанным course_id не найден
+			query = '''
+		            SELECT promocode, usages_left, chat_id, chat_name
+		            FROM promocodes
+		            WHERE course_id = ?
+		        '''
+			result = await self.execute_query(query, (course_id,))
+			if result:
+				return result[0]  # Возвращаем кортеж (promocode, usage_left, chat_id, chat_name)
+			else:
+				return None
 
 	async def get_user_courses(self, tg_id):
 		query = '''

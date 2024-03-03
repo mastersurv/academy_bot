@@ -27,6 +27,7 @@ async def get_promo_usage_handler(message: Message, state: FSMContext):
             chat_id=tg_id,
             text=f"Для курса: <b>{course_name}</b>\n"
                  f"Успешно добавлен {usage}-разовый промокод: <i>{new_promo}</i>",
+	        parse_mode='html',
             reply_markup=InlineKeyboardMarkup().add(
                 InlineKeyboardButton(
                     text="Назад",

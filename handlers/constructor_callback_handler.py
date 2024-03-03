@@ -736,7 +736,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
 		if callback[:6] == "lesson":
 			keyboard = await generate_multi_keyboard(course_id=course_id, module_id=module_id, lesson_id=lesson_id,
-			                                         test_id=None)  # TODO func
+			                                         test_id=None)
 			# keyboard = InlineKeyboardMarkup().add(
 			#     InlineKeyboardButton(
 			#         text="Назад",
@@ -970,13 +970,20 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		another_promo_list = await db.get_promocode(course_id=course_id) # TODO вернуть список кортежей из promocode/usage_left/chat_id/chat_name
 		promo_text = f"<b>{course_name}</b>\nПостоянный промокод для курса: {promo_code}\n"
 
+		# if another_promo_list:
+		# 	for elem in another_promo_list:
+		# 		custom_promo, usage_left, chat_id, chat_name = elem
+		# 		if usage_left and usage_left > 0:
+		# 			promo_text += f"{custom_promo} - использований осталось: {usage_left}\n"
+		# 		elif chat_id:
+		# 			promo_text += f"{custom_promo} - прокомод, привязанный к группе: {course_name.lower().capitalize()}\n"
+
 		if another_promo_list:
-			for elem in another_promo_list:
-				custom_promo, usage_left, chat_id, chat_name = elem
-				if usage_left and usage_left > 0:
-					promo_text += f"{custom_promo} - использований осталось: {usage_left}\n"
-				elif chat_id:
-					promo_text += f"{custom_promo} - прокомод, привязанный к группе: {course_name.lower().capitalize()}\n"
+			custom_promo, usage_left, chat_id, chat_name = another_promo_list
+			if usage_left and usage_left > 0:
+				promo_text += f"{custom_promo} - использований осталось: {usage_left}\n"
+			elif chat_id:
+				promo_text += f"{custom_promo} - прокомод, привязанный к группе: {course_name.lower().capitalize()}\n"
 
 		promo_text += "\n"
 
@@ -1002,8 +1009,9 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		async with state.proxy() as data:
 			data["course_id"] = course_id
 
-		await bot.send_message(
-			chat_id=tg_id,
+		await bot.edit_message_text(
+			chat_id=chat,
+			message_id=m_id,
 			text="Введите количество использований для промокода или вернитесь назад",
 			reply_markup=InlineKeyboardMarkup().add(
 				InlineKeyboardButton(
@@ -1020,8 +1028,9 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		async with state.proxy() as data:
 			data["course_id"] = course_id
 
-		await bot.send_message(
-			chat_id=tg_id,
+		await bot.edit_message_text(
+			chat_id=chat,
+			message_id=m_id,
 			text="Добавьте бота в группу, к которой хотите привязать промокод, сделайте его админом и напишите команду /set_group.\n"
 				 "Или вернитесь назад.\n"
 				 "ВАЖНО: чат должен быть группой или супергруппой, иначе бот не привяжется",
