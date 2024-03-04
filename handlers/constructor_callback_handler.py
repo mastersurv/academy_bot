@@ -805,8 +805,6 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 			reply_markup=keyboard
 		)
 
-
-
 	elif callback.startswith("final_message_"):
 		course_id = int(callback.split("_")[2])
 		text, voice_id, photo_id, video_id, video_note_id, document_id = await db.get_final_message(course_id=course_id)
@@ -989,14 +987,16 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
 
 		message_text = f"{promo_text}" \
-		               "Для выдачи пользователю доступа к курсу отправьте ему данный промокод." \
-		               "Он должен перейти в меню и выбрать 'Получить курс'." \
-		               "После этого ему будет выдан доступ."
+		               "Для выдачи пользователю доступа к курсу отправьте ему необходимый промокод. " \
+		               "Он должен перейти в меню и выбрать 'Получить курс'. " \
+		               "После этого ему будет выдан доступ.\n\n"\
+		               "Если вы хотите создать промокод, который можно использовать только n-ное  кол-во раз, то перейдите по кнопке СОЗДАТЬ N-РАЗОВЫЙ ПРОМОКОД\n\n"\
+		               "Если вы хотите дать доступ к курсу только определенной чат-группе, перейдите по кнопке - ПРИВЯЗАТЬ ПРОМОКОД К ЧАТ-ГРУППЕ"\
 
 		# Создаем Inline Keyboard Markup с кнопкой "Назад"
 		keyboard = InlineKeyboardMarkup()
-		keyboard.add(InlineKeyboardButton(text="Создать n-promocode", callback_data=f"generate_n_promo_{course_id}"))
-		keyboard.add(InlineKeyboardButton(text="Привязать прокомод к группе", callback_data=f"generate_group_promo_{course_id}"))
+		keyboard.add(InlineKeyboardButton(text="Создать n-разовый промокод", callback_data=f"generate_n_promo_{course_id}"))
+		keyboard.add(InlineKeyboardButton(text="Привязать прокомод к чат-группе", callback_data=f"generate_group_promo_{course_id}"))
 		keyboard.add(InlineKeyboardButton(text="Назад", callback_data="courses_promocodes"))
 
 		# Отправляем сообщение пользователю
@@ -1031,7 +1031,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		await bot.edit_message_text(
 			chat_id=chat,
 			message_id=m_id,
-			text="Добавьте бота в группу, к которой хотите привязать промокод, сделайте его админом и напишите команду /set_group.\n"
+			text="Добавьте бота в группу, к которой хотите привязать промокод, сделайте его админом и напишите команду /set_group\n"
 				 "Или вернитесь назад.\n"
 				 "ВАЖНО: чат должен быть группой или супергруппой, иначе бот не привяжется",
 			reply_markup=InlineKeyboardMarkup().add(
@@ -1046,13 +1046,31 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		course_id = int(callback.split("_")[2])
 
 		new_promo = await db.generate_unique_promocode(course_id=course_id)
-		chat_name = call.message.chat.title # TODO сделать проверку при тесте
-		print("Ctrl + F - set_group, тут chat_name, должен соответствовать названию группы, куда добавили")
+		chat_name = call.message.chat.title
 
 		await db.add_promocode(
 			course_id=course_id,
 			promocode=new_promo,
 			chat_id=chat,
 			chat_name=chat_name
+		)
+		course_name = call.message.reply_markup.inline_keyboard[0][0].text
+
+		text = f"Промокод {new_promo} успешно установлен для группы {chat_name}"
+		existing_promocode = await db.get_promocode(course_id)
+		if existing_promocode[2]:
+			text = f"Промокод уже существует для курса <b>{course_name}</b>:\n\n{existing_promocode[0]}"
+
+		await bot.edit_message_text(
+			chat_id=chat,
+			message_id=m_id,
+			text=text,
+			parse_mode='html',
+			reply_markup=InlineKeyboardMarkup().add(
+				InlineKeyboardButton(
+					text="Назад",
+					url='https://t.me/courses_Bbot'
+				)
+			)
 		)
 

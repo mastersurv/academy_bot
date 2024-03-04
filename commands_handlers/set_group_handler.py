@@ -14,7 +14,7 @@ async def set_group_handler(message: Message, state: FSMContext):
         courses_ids = await db.get_courses_ids(tg_id=tg_id)
         keyboard = InlineKeyboardMarkup()
         for ci in courses_ids:
-            course_name = db.get_course_name(course_id=ci)
+            course_name = await db.get_course_name(course_id=ci)
             keyboard.add(
                 InlineKeyboardButton(
                     text=f"{course_name}",
