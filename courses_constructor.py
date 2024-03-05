@@ -1,5 +1,5 @@
 from aiogram import Bot, Dispatcher, executor
-from aiogram.types import InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton, BotCommand
 from utils.db_api.database import DataBase
 
 from aiogram.types import Message, ContentTypes
@@ -38,6 +38,7 @@ class MyBot:
 		self.bot = bot
 		self.dp = dp
 		self.db = db
+
 
 	async def start_handler(self, message: Message, state: FSMContext):
 		chat = message.chat.id
@@ -82,6 +83,12 @@ class MyBot:
 
 			except Exception as e:
 				print(e)
+
+		await self.bot.set_my_commands(
+			commands=[
+				BotCommand(command="start", description="Запуск")
+			]
+		)
 
 	async def text_handler(self, message: Message, state: FSMContext):
 		print(message)
