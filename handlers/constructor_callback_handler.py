@@ -1047,19 +1047,19 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
 		new_promo = await db.generate_unique_promocode(course_id=course_id)
 		chat_name = call.message.chat.title
-
-		await db.add_promocode(
-			course_id=course_id,
-			promocode=new_promo,
-			chat_id=chat,
-			chat_name=chat_name
-		)
 		course_name = call.message.reply_markup.inline_keyboard[0][0].text
 
 		text = f"Промокод {new_promo} успешно установлен для группы {chat_name}"
 		existing_promocode = await db.get_promocode(course_id)
-		if existing_promocode[2]:
+		if existing_promocode and existing_promocode[2]:
 			text = f"Промокод уже существует для курса <b>{course_name}</b>:\n\n{existing_promocode[0]}"
+		else:
+			await db.add_promocode(
+				course_id=course_id,
+				promocode=new_promo,
+				chat_id=chat,
+				chat_name=chat_name
+			)
 
 		await bot.edit_message_text(
 			chat_id=chat,
