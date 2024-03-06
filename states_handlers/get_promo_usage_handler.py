@@ -23,6 +23,11 @@ async def get_promo_usage_handler(message: Message, state: FSMContext):
             usages_left=int(usage)
         )
 
+        try:
+            await bot.edit_message_reply_markup(chat_id=chat, message_id=m_id - 1)
+        except Exception as e:
+            print(e)
+
         await bot.send_message(
             chat_id=tg_id,
             text=f"Для курса: <b>{course_name}</b>\n"

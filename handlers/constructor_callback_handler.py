@@ -965,23 +965,16 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 		course_name = await db.get_course_name(course_id)
 		promo_code = await db.get_promocode(course_id, permanent=True)
 
-		another_promo_list = await db.get_promocode(course_id=course_id) # TODO вернуть список кортежей из promocode/usage_left/chat_id/chat_name
+		another_promo_list = await db.get_promocode(course_id=course_id)
 		promo_text = f"<b>{course_name}</b>\nПостоянный промокод для курса: {promo_code}\n"
 
-		# if another_promo_list:
-		# 	for elem in another_promo_list:
-		# 		custom_promo, usage_left, chat_id, chat_name = elem
-		# 		if usage_left and usage_left > 0:
-		# 			promo_text += f"{custom_promo} - использований осталось: {usage_left}\n"
-		# 		elif chat_id:
-		# 			promo_text += f"{custom_promo} - прокомод, привязанный к группе: {course_name.lower().capitalize()}\n"
-
 		if another_promo_list:
-			custom_promo, usage_left, chat_id, chat_name = another_promo_list
-			if usage_left and usage_left > 0:
-				promo_text += f"{custom_promo} - использований осталось: {usage_left}\n"
-			elif chat_id:
-				promo_text += f"{custom_promo} - прокомод, привязанный к группе: {course_name.lower().capitalize()}\n"
+			for elem in another_promo_list:
+				custom_promo, usage_left, chat_id, chat_name = elem
+				if usage_left and usage_left > 0:
+					promo_text += f"{custom_promo} - использований осталось: {usage_left}\n"
+				elif chat_id:
+					promo_text += f"{custom_promo} - прокомод, привязанный к группе: {chat_name}\n"
 
 		promo_text += "\n"
 
@@ -1047,12 +1040,16 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
 		new_promo = await db.generate_unique_promocode(course_id=course_id)
 		chat_name = call.message.chat.title
-		course_name = call.message.reply_markup.inline_keyboard[0][0].text
+		course_name = await db.get_course_name(course_id=course_id)
+		# course_name = call.message.reply_markup.inline_keyboard[0][0].text
 
 		text = f"Промокод {new_promo} успешно установлен для группы {chat_name}"
-		existing_promocode = await db.get_promocode(course_id)
-		if existing_promocode and existing_promocode[2]:
-			text = f"Промокод уже существует для курса <b>{course_name}</b>:\n\n{existing_promocode[0]}"
+		existing_promocode_list = await db.get_promocode(course_id)
+
+		for existing_promocode in existing_promocode_list:
+			if existing_promocode and existing_promocode[2]:
+				text = f"Промокод уже существует для курса <b>{course_name}</b>:\n\n{existing_promocode[0]}"
+				break
 		else:
 			await db.add_promocode(
 				course_id=course_id,
