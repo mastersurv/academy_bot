@@ -533,7 +533,7 @@ class DataBase:
 			if result:
 				return result  # Возвращаем кортеж (promocode, usage_left, chat_id, chat_name)
 			else:
-				return None
+				return []
 
 	async def get_user_courses(self, tg_id):
 		query = '''
@@ -1088,3 +1088,16 @@ class DataBase:
 
 		return result[0]
 
+	async def delete_course(self, course_id):
+
+		# 1. Удаление связанных записей из других таблиц
+		await self.execute_query('DELETE FROM user_courses WHERE course_id = ?', (course_id,))
+		await self.execute_query('DELETE FROM promocodes WHERE course_id = ?', (course_id,))
+		await self.execute_query('DELETE FROM modules WHERE course_id = ?', (course_id,))
+		await self.execute_query('DELETE FROM lessons WHERE course_id = ?', (course_id,))
+		await self.execute_query('DELETE FROM test_questions WHERE course_id = ?', (course_id,))
+		await self.execute_query('DELETE FROM test_answers WHERE course_id = ?', (course_id,))
+		await self.execute_query('DELETE FROM final_message WHERE course_id = ?', (course_id,))
+
+		# 2. Удаление записи о курсе из таблицы courses
+		await self.execute_query('DELETE FROM courses WHERE course_id = ?', (course_id,))

@@ -326,10 +326,11 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
     elif callback.startswith("delete_course"):
         course_id = int(callback.split("_")[2])
-        course_name = db.get_course_name(course_id=course_id)
+        course_name = await db.get_course_name(course_id=course_id)
 
-        await bot.send_message(
+        await bot.edit_message_text(
             chat_id=tg_id,
+	        message_id=m_id,
             text="Вы уверены, что хотите удалить курс:\n"
                  f"<b>{course_name}</b>?",
             parse_mode="html",
@@ -347,14 +348,15 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
     elif callback.startswith("confirm_deletion"):
         course_id = int(callback.split("_")[2])
-        course_name = db.get_course_name(course_id=course_id)
+        course_name = await db.get_course_name(course_id=course_id)
         await db.delete_course(course_id=course_id)  # TODO deletion from every table where course_id is
 
-        await bot.send_message(
+        await bot.edit_message_text(
             chat_id=tg_id,
+	        message_id=m_id,
             text=f"Вы удалили курс <b>{course_name}</b>",
             parse_mode="html",
-            reply_markup=menu
+            reply_markup=admin_menu
         )
 
     elif callback[:10] == "add_module":
