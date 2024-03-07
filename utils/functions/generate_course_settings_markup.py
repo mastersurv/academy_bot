@@ -41,6 +41,11 @@ async def generate_courses_settings_keyboard(course_id: int) -> InlineKeyboardMa
         )
     ).add(
         InlineKeyboardButton(
+            text="Удалить курс",
+            callback_data=f"delete_course_{course_id}"
+        )
+    ).add(
+        InlineKeyboardButton(
             text="Назад",
             callback_data="created_courses"
         )

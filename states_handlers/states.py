@@ -7,6 +7,7 @@ class MenuStates(StatesGroup):
     group_promo = State()
     ask_question = State()
 
+    button_post = State()
 
 class SettingsStates(StatesGroup):
     create_course = State()

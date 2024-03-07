@@ -16,12 +16,6 @@ menu = InlineKeyboardMarkup().add(
         callback_data="ask_question"
     )
 )
-# ).add(
-#     InlineKeyboardButton(
-#         text="Купить подписку",
-#         callback_data="buy_subscription"
-#     )
-# )
 
 to_menu = InlineKeyboardMarkup().add(
     InlineKeyboardButton(
@@ -169,5 +163,13 @@ back_to_settings = InlineKeyboardMarkup().add(
     InlineKeyboardButton(
         text="Назад",
         callback_data="back_to_bot_settings"
+    )
+)
+
+
+owners_keyboard = InlineKeyboardMarkup().add(
+    InlineKeyboardButton(
+        text="Привязать к посту кнопку",
+        callback_data="button_post"
     )
 )
