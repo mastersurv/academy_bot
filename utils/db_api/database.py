@@ -145,6 +145,23 @@ class DataBase:
 			)
 		''')
 
+		await self.execute_query('''
+			CREATE TABLE IF NOT EXISTS user_passing (
+			    tg_id INTEGER,
+			    course_id INTEGER,
+			    status TEXT,
+			)
+		''')
+
+		await self.execute_query('''
+			CREATE TABLE IF NOT EXISTS course_completion_time (
+			    tg_id INTEGER,
+			    course_id INTEGER,
+			    start_time TEXT,
+			    end_time TEXT,
+			)
+		''')
+
 	async def add_user_post(self, tg_id: int, post_id: int) -> None:
 		if self.conn is None:
 			await self.connect()
@@ -1089,8 +1106,6 @@ class DataBase:
 		return result[0]
 
 	async def delete_course(self, course_id):
-
-		# 1. Удаление связанных записей из других таблиц
 		await self.execute_query('DELETE FROM user_courses WHERE course_id = ?', (course_id,))
 		await self.execute_query('DELETE FROM promocodes WHERE course_id = ?', (course_id,))
 		await self.execute_query('DELETE FROM modules WHERE course_id = ?', (course_id,))
@@ -1099,5 +1114,57 @@ class DataBase:
 		await self.execute_query('DELETE FROM test_answers WHERE course_id = ?', (course_id,))
 		await self.execute_query('DELETE FROM final_message WHERE course_id = ?', (course_id,))
 
-		# 2. Удаление записи о курсе из таблицы courses
 		await self.execute_query('DELETE FROM courses WHERE course_id = ?', (course_id,))
+
+	async def add_user_passer(self, tg_id, course_id, status):
+		query = '''
+	        INSERT OR REPLACE INTO user_passing (tg_id, course_id, status)
+	        VALUES (?, ?, ?)
+	    '''
+		await self.execute_query(query, (tg_id, course_id, status))
+
+	async def update_user_passer(self, tg_id, course_id, status):
+		query = '''
+	        UPDATE user_passing
+	        SET status = ?
+	        WHERE tg_id = ? AND course_id = ?
+	    '''
+		await self.execute_query(query, (status, tg_id, course_id))
+
+	async def get_user_passer_status(self, tg_id):
+		query = '''
+	        SELECT status
+	        FROM user_passing
+	        WHERE tg_id = ?
+	    '''
+		result = await self.execute_query(query, (tg_id,))
+		if result:
+			return result[0][0]
+		else:
+			return None
+
+	async def get_users_passers_by_status(self, course_id, status):
+		if status == "all":
+			query = '''
+	            SELECT tg_id
+	            FROM user_passing
+	            WHERE course_id = ?
+	        '''
+			result = await self.execute_query(query, (course_id,))
+			if result:
+				return [row[0] for row in result]
+			else:
+				return 0
+		else:
+			query = '''
+	            SELECT tg_id
+	            FROM user_passing
+	            WHERE course_id = ? AND status = ?
+	        '''
+			result = await self.execute_query(query, (course_id, status))
+			if result:
+				return [row[0] for row in result]
+			else:
+				return 0
+
+
