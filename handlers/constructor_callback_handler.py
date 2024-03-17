@@ -17,6 +17,7 @@ from utils.functions.generate_multi_markup import generate_multi_keyboard
 from utils.functions.send_lesson import send_lesson
 from config import easycourses_channel
 
+from datetime import datetime
 from states_handlers.states import SettingsStates, MenuStates
 from blanks.bot_markup import (
     menu,
@@ -544,7 +545,6 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             reply_markup=keyboard
         )
 
-
     elif callback[:10] == "add_lesson":
         course_id = int(callback.split("_")[2])
         module_id = int(callback.split("_")[3])
@@ -752,6 +752,13 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             course_id = int(callback.split("_")[1])
             module_id = int(callback.split("_")[2])
             lesson_id = int(callback.split("_")[3])
+
+            if lesson_id == 1:
+                status = await db.get_user_passer_status(tg_id=tg_id)
+                if status == "interested":
+                    await db.update_user_passer(tg_id=tg_id, course_id=course_id, status="passer")
+                    await db.add_completion(tg_id=tg_id, course_id=course_id, start_time=str(datetime.now)[:-7].replace("-", "_").replace(":", "_").replace(".", "_"))
+
         elif callback[:17] == "check_demo_lesson":
             course_id = int(callback.split("_")[3])
             module_id = int(callback.split("_")[4])
@@ -842,6 +849,11 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
     elif callback.startswith("final_message_"):
         course_id = int(callback.split("_")[2])
+
+        user_status = await db.get_user_passer_status(tg_id=tg_id)
+        if user_status != "passed":
+            await db.update_user_passer(tg_id=tg_id, course_id=course_id, status="passed")
+            await db.insert_end_time(tg_id=tg_id, course_id=course_id, end_time=str(datetime.now)[:-7].replace("-", "_").replace(":", "_").replace(".", "_"))
         text, voice_id, photo_id, video_id, video_note_id, document_id = await db.get_final_message(course_id=course_id)
         course_name = await db.get_course_name(course_id=course_id)
 
