@@ -41,7 +41,7 @@ class DataBase:
 		await self.execute_query('''
 		    CREATE TABLE IF NOT EXISTS subscription(
 				  sub_id INTEGER,
-				  tg_id int REFERENCES users(tg_id),
+				  tg_id int,
 				  created_at datetime,
 				  valid_till datetime
 				)
@@ -49,7 +49,7 @@ class DataBase:
 
 		await self.execute_query('''
 		            CREATE TABLE IF NOT EXISTS user_courses(
-		                tg_id int REFERENCES users(tg_id),
+		                tg_id int,
 		                course_id INT REFERENCES courses(course_id)
 		            )
 		        ''')
@@ -75,7 +75,7 @@ class DataBase:
 		await self.execute_query('''
 		    CREATE TABLE IF NOT EXISTS courses (
 		        course_id INTEGER PRIMARY KEY,
-		        owner_id INTEGER REFERENCES users(tg_id),
+		        owner_id INTEGER,
 		        course_name TEXT,
 		        course_description TEXT,
 		        course_image_id TEXT,
