@@ -531,7 +531,7 @@ class DataBase:
 		        '''
 			result = await self.execute_query(query, (course_id,))
 			if result:
-				return result  # Возвращаем кортеж (promocode, usage_left, chat_id, chat_name)
+				return result[0]  # Возвращаем кортеж (promocode, usage_left, chat_id, chat_name)
 			else:
 				return []
 

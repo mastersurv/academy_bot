@@ -1,5 +1,5 @@
-TOKEN = "6358930380:AAFrJoDufBTjYVYreSB4r-Zufkc8oPITuAk"
-# TOKEN = "5684427805:AAG8uTXj6XpxYmAnIZawiHPNZTGmrscmV5A"
+TOKEN = "6358930380:AAFrJoDufBTjYVYreSB4r-Zufkc8oPITuAk"  # main token
+# TOKEN = "5684427805:AAG8uTXj6XpxYmAnIZawiHPNZTGmrscmV5A"  # test token
 channel_id = -1001884385443  # There are posts with user's info
 group_id = -1002078521819  # There are messages from user in comments for posts from channel
 easycourses_channel = -1002118596503  # This ID is used to check if user is a member of our channel
