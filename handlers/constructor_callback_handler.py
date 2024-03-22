@@ -13,6 +13,7 @@ from utils.functions.generate_courses_promocode_markup import generate_courses_p
 from utils.functions.generate_modules_settings_markup import generate_modules_settings_keyboard
 from utils.functions.generate_lessons_settings_markup import generate_lessons_settings_keyboard
 from utils.functions.generate_multi_markup import generate_multi_keyboard
+from utils.functions.statistics_from_course import statistics_to_creator
 
 from utils.functions.send_lesson import send_lesson
 from config import easycourses_channel
@@ -324,6 +325,29 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             )
         except:
             print(f"проблемы с колбэк: {callback}")
+
+    elif callback.startswith("get_course_statistics"):
+        course_id = int(callback.split("_")[3])
+        course_name = await db.get_course_name(course_id=course_id)
+        passing_percentage, passed_users, right_answer, wrong_answer, average_time = await statistics_to_creator(course_id=course_id)
+
+        await bot.edit_message_text(
+            chat_id=tg_id,
+            text=f"Статистика по курсу <b>{course_name}</b>:\n\n"
+                 f"Доходимость курса: {passing_percentage}\n"
+                 f"Количество проходящих курс сейчас: {passed_users}\n"
+                 f"Количество верных ответов: {right_answer}\n"
+                 f"Количество неверных ответов: {wrong_answer}\n"
+                 f"Среднее время прохождения курса: {average_time}",
+            message_id=m_id,
+            reply_markup=InlineKeyboardMarkup().add(
+                    InlineKeyboardButton(
+                        text="К настройке курса",
+                        callback_data=f"course_settings_{course_id}"
+                    )
+                )
+        )
+
 
     elif callback.startswith("delete_course"):
         course_id = int(callback.split("_")[2])
@@ -937,11 +961,21 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
                 if (len(callback_data.split("_")) == 6 and callback_data.split("_")[5] == right_answer
                         and callback_data == callback and text[0] != '✅' and text[0] != '❌'):
+                    test_positive_count = await db.get_positive_count(tg_id=tg_id, course_id=course_id) # TODO
+                    if test_positive_count == 0:
+                        await db.add_positive_count(tg_id=tg_id, course_id=course_id, positive_count=1) # TODO
+                    else:
+                        await db.plus_positive_count(tg_id=tg_id, course_id=course_id) # TODO update request
                     text = "✅ " + text
                     is_right = True
 
                 elif callback_data == callback and text[0] != '❌' and text[0] != '✅':
                     text = "❌ " + text
+                    test_negative_count = await db.get_negative_count(tg_id=tg_id, course_id=course_id, negative_count=1)
+                    if test_negative_count == 0:
+                        await db.add_negative_count(tg_id=tg_id, course_id=course_id, positive_count=1)  # TODO
+                    else:
+                        await db.plus_negative_count(tg_id=tg_id, course_id=course_id)  # TODO update request
 
                 l_data.append(callback_data)
                 l_text.append(text)
