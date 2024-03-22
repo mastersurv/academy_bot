@@ -149,7 +149,7 @@ class DataBase:
 			CREATE TABLE IF NOT EXISTS user_passing (
 			    tg_id INTEGER,
 			    course_id INTEGER,
-			    status TEXT,
+			    status TEXT
 			)
 		''')
 
@@ -158,7 +158,7 @@ class DataBase:
 			    tg_id INTEGER,
 			    course_id INTEGER,
 			    start_time TEXT,
-			    end_time TEXT,
+			    end_time TEXT
 			)
 		''')
 
@@ -1167,4 +1167,32 @@ class DataBase:
 			else:
 				return 0
 
+	async def insert_end_time(self, tg_id, course_id, end_time):
+		query = '''
+	        UPDATE course_completion_time
+	        SET end_time = ?
+	        WHERE tg_id = ? AND course_id = ?
+	    '''
+		await self.execute_query(query, (end_time, tg_id, course_id))
 
+	async def add_completion(self, tg_id, course_id, start_time):
+		if self.conn is None:
+			await self.connect()
+
+		query = '''
+	        INSERT INTO course_completion_time (tg_id, course_id, start_time)
+	        VALUES (?, ?, ?)
+	    '''
+		await self.execute_query(query, (tg_id, course_id, start_time))
+
+	async def get_completion(self, tg_id, course_id):
+		query = '''
+	        SELECT start_time, end_time
+	        FROM course_completion_time
+	        WHERE tg_id = ? AND course_id = ?
+	    '''
+		result = await self.execute_query(query, (tg_id, course_id))
+		if result:
+			return result[0]
+		else:
+			return None
