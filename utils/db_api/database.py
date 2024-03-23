@@ -320,17 +320,14 @@ class DataBase:
         ''', (course_id, module_id, lesson_id, test_id))
 
 	async def get_courses_ids(self, tg_id):
-		if self.conn is None:
-			await self.connect()
-
 		query = '''
-            SELECT course_id
-            FROM courses
-            WHERE owner_id = ?
-        '''
-
-		user_courses = await self.execute_query(query, (tg_id,))
-		return [course[0] for course in user_courses] if user_courses else []
+	        SELECT course_id
+	        FROM user_courses
+	        WHERE tg_id = ?
+	    '''
+		result = await self.execute_query(query, (tg_id,))
+		courses_ids = [row[0] for row in result] if result else []
+		return courses_ids
 
 	# ------------------- оставшиеся методы -------------------
 	async def get_creators_ids(self) -> list:
@@ -1195,4 +1192,4 @@ class DataBase:
 		if result:
 			return result[0]
 		else:
-			return None
+			return None, None

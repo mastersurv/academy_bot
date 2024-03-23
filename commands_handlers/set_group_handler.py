@@ -11,7 +11,7 @@ async def set_group_handler(message: Message, state: FSMContext):
 
     print(f"Файл get_promo_usage_handler.py проверка chat_type: {chat_type}")
     if chat_type in ["group", "supergroup"]:
-        courses_ids = await db.get_courses_ids(tg_id=tg_id)
+        courses_ids = await db.get_created_courses_ids(tg_id=tg_id)
         keyboard = InlineKeyboardMarkup()
         for ci in courses_ids:
             course_name = await db.get_course_name(course_id=ci)
