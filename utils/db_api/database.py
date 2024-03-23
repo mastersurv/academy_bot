@@ -267,7 +267,7 @@ class DataBase:
 	async def add_lesson(
 			self, lesson_id: int, module_id: int, course_id: int, lesson_title: str,
 			text: str = None, audio_id: str = None, photo_id: str = None, video_id: str = None,
-			video_note_id: str = None, document_id: str = None, document_name: str = None
+			video_note_id: str = None, document_id: str = None
 	):
 		if self.conn is None:
 			await self.connect()
@@ -275,13 +275,13 @@ class DataBase:
 		query = '''
             INSERT OR REPLACE INTO lessons (
                 lesson_id, module_id, course_id, lesson_title, text, 
-                audio, photo, video, video_note, document, document_name
+                audio, photo, video, video_note, document
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         '''
 		await self.execute_query(query, (
 			lesson_id, module_id, course_id, lesson_title, text,
-			audio_id, photo_id, video_id, video_note_id, document_id, document_name
+			audio_id, photo_id, video_id, video_note_id, document_id
 		))
 
 	async def add_test_answer(self, course_id, module_id, lesson_id, test_id, answer_num, answer):

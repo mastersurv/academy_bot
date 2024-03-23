@@ -13,7 +13,7 @@ async def edit_lesson_material(message: Message, state: FSMContext):
     m_id = message.message_id
 
     text, audio_id, photo_id, video_id, video_note_id, document_id = await files_ids(message=message, bot=bot)
-    # print(text, audio_id, photo_id, video_id, video_note_id, document_id)
+    print(text, audio_id, photo_id, video_id, video_note_id, document_id)
     try:
         await bot.edit_message_reply_markup(
             chat_id=chat_id,
@@ -91,6 +91,7 @@ async def edit_lesson_material(message: Message, state: FSMContext):
             await SettingsStates.settings.set()
 
     else:
+        print('here')
         await bot.send_message(
             chat_id=chat_id,
             text="Отправьте материал к уроку, доступные форматы:\n" \

@@ -28,11 +28,10 @@ async def files_ids(message, bot):
         file = await bot.get_file(message.document.file_id)
         file_path = file.file_path
 
-        if file_path.endswith(".pdf"):
-            document_id = message.document.file_id
+        document_id = message.document.file_id
 
-            if message.caption:
-                text = message.html_text
+        if message.caption:
+            text = message.html_text
 
     elif message.text:
         text = message.html_text
