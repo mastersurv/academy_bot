@@ -14,6 +14,7 @@ from utils.functions.generate_modules_settings_markup import generate_modules_se
 from utils.functions.generate_lessons_settings_markup import generate_lessons_settings_keyboard
 from utils.functions.generate_multi_markup import generate_multi_keyboard
 from utils.functions.statistics_from_course import statistics_to_creator
+from utils.functions.statistics_to_student import statistics_to_student
 
 from utils.functions.send_lesson import send_lesson
 from config import easycourses_channel
@@ -348,6 +349,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
                 )
         )
 
+    elif callback == "statistics_to_student":
+        await statistics_to_student(tg_id=tg_id)
 
     elif callback.startswith("delete_course"):
         course_id = int(callback.split("_")[2])
@@ -778,7 +781,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             lesson_id = int(callback.split("_")[3])
 
             if lesson_id == 1:
-                status = await db.get_user_passer_status(tg_id=tg_id)
+                status = await db.get_user_passer_status(tg_id=tg_id, course_id=course_id) # TODO добавь в запрос ci
                 if status == "interested":
                     await db.update_user_passer(tg_id=tg_id, course_id=course_id, status="passer")
                     await db.add_completion(tg_id=tg_id, course_id=course_id, start_time=str(datetime.now)[:-7].replace("-", "_").replace(":", "_").replace(".", "_"))
