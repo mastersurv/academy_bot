@@ -46,6 +46,11 @@ admin_menu = InlineKeyboardMarkup().add(
     )
 ).add(
     InlineKeyboardButton(
+        text="Получить мою статистику",
+        callback_data="statistics_to_student"
+    )
+).add(
+    InlineKeyboardButton(
         text="Задать вопрос",
         callback_data="ask_question"
     )
