@@ -162,6 +162,22 @@ class DataBase:
 			)
 		''')
 
+		await self.execute_query('''
+		    CREATE TABLE IF NOT EXISTS user_positive_counts (
+		        tg_id INTEGER,
+		        course_id INTEGER,
+		        positive_count INTEGER DEFAULT 0
+		    )
+		''')
+
+		await self.execute_query('''
+		    CREATE TABLE IF NOT EXISTS user_negative_counts (
+		        tg_id INTEGER,
+		        course_id INTEGER,
+		        negative_count INTEGER DEFAULT 0
+		    )
+		''')
+
 	async def add_user_post(self, tg_id: int, post_id: int) -> None:
 		if self.conn is None:
 			await self.connect()
@@ -1151,7 +1167,7 @@ class DataBase:
 			if result:
 				return [row[0] for row in result]
 			else:
-				return 0
+				return []
 		else:
 			query = '''
 	            SELECT tg_id
@@ -1162,7 +1178,7 @@ class DataBase:
 			if result:
 				return [row[0] for row in result]
 			else:
-				return 0
+				return []
 
 	async def insert_end_time(self, tg_id, course_id, end_time):
 		query = '''
@@ -1193,3 +1209,41 @@ class DataBase:
 			return result[0]
 		else:
 			return None, None
+
+	async def get_positive_count(self, tg_id, course_id):
+		query = '''
+	        SELECT positive_count
+	        FROM user_positive_counts
+	        WHERE tg_id = ? AND course_id = ?
+	    '''
+		result = await self.execute_query(query, (tg_id, course_id))
+		return result[0][0] if result else 0
+
+	async def add_positive_count(self, tg_id, course_id, positive_count):
+		query = '''
+	        INSERT OR REPLACE INTO user_positive_counts (tg_id, course_id, positive_count)
+	        VALUES (?, ?, COALESCE((SELECT positive_count FROM user_positive_counts WHERE tg_id = ? AND course_id = ?), 0) + ?)
+	    '''
+		await self.execute_query(query, (tg_id, course_id, tg_id, course_id, positive_count))
+
+	async def plus_positive_count(self, tg_id, course_id):
+		await self.add_positive_count(tg_id, course_id, 1)
+
+	async def get_negative_count(self, tg_id, course_id):
+		query = '''
+	        SELECT negative_count
+	        FROM user_negative_counts
+	        WHERE tg_id = ? AND course_id = ?
+	    '''
+		result = await self.execute_query(query, (tg_id, course_id))
+		return result[0][0] if result else 0
+
+	async def add_negative_count(self, tg_id, course_id, negative_count):
+		query = '''
+	        INSERT OR REPLACE INTO user_negative_counts (tg_id, course_id, negative_count)
+	        VALUES (?, ?, COALESCE((SELECT negative_count FROM user_negative_counts WHERE tg_id = ? AND course_id = ?), 0) + ?)
+	    '''
+		await self.execute_query(query, (tg_id, course_id, tg_id, course_id, negative_count))
+
+	async def plus_negative_count(self, tg_id, course_id):
+		await self.add_negative_count(tg_id, course_id, 1)

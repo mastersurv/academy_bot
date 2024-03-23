@@ -10,11 +10,11 @@ async def statistics_to_creator(course_id: int):
     if len(all_users) == 0:
         passing_percentage = "0 %"
     else:
-        passing_percentage = str(round(passed_users / all_users * 100, 1)) + "%"
+        passing_percentage = str(round(len(passed_users) / len(all_users) * 100, 1)) + "%"
 
     years, month, days, hours, minutes = 0, 0, 0, 0, 0
     for user_id in all_users:
-        start_time, end_time = await db.get_completion(tg_id=user_id, course_id=course_id) # TODO
+        start_time, end_time = await db.get_completion(tg_id=user_id, course_id=course_id)
         if start_time and end_time:
             start_time_list = start_time.split("_")
             end_time_list = end_time.split("_")
@@ -33,4 +33,4 @@ async def statistics_to_creator(course_id: int):
         right_answer += await db.get_positive_count(tg_id=user_id, course_id=course_id) # TODO
         wrong_answer += await db.get_negative_count(tg_id=user_id, course_id=course_id) # TODO
 
-    return (passing_percentage, passed_users, right_answer, wrong_answer, average_time)
+    return (passing_percentage, len(passed_users), right_answer, wrong_answer, average_time)

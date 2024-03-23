@@ -339,6 +339,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
                  f"Количество верных ответов: {right_answer}\n"
                  f"Количество неверных ответов: {wrong_answer}\n"
                  f"Среднее время прохождения курса: {average_time}",
+	        parse_mode='html',
             message_id=m_id,
             reply_markup=InlineKeyboardMarkup().add(
                     InlineKeyboardButton(
@@ -374,7 +375,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
     elif callback.startswith("confirm_deletion"):
         course_id = int(callback.split("_")[2])
         course_name = await db.get_course_name(course_id=course_id)
-        await db.delete_course(course_id=course_id)  # TODO deletion from every table where course_id is
+        await db.delete_course(course_id=course_id)
 
         await bot.edit_message_text(
             chat_id=tg_id,
