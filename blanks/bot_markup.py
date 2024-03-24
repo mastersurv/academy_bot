@@ -63,10 +63,16 @@ admin_menu = InlineKeyboardMarkup().add(
 # )
 
 
+# course_creation = InlineKeyboardMarkup().add(
+#     InlineKeyboardButton(
+#         text="Созданные курсы",
+#         callback_data="created_courses"
+#     )
+# ).add(
 course_creation = InlineKeyboardMarkup().add(
     InlineKeyboardButton(
         text="Созданные курсы",
-        callback_data="created_courses"
+        callback_data="edit_analytics"
     )
 ).add(
     InlineKeyboardButton(
@@ -119,7 +125,7 @@ bot_settings_mp = (InlineKeyboardMarkup().add(
     )
 ).add(
     InlineKeyboardButton(
-        text="Добавить модуль",
+        text="Добавить модуль 🎯",
         callback_data="edit_module"
     )
 ).add(
@@ -132,7 +138,7 @@ bot_settings_mp = (InlineKeyboardMarkup().add(
 
 modules_settings_mp = InlineKeyboardMarkup().add(
     InlineKeyboardButton(
-        text="Добавить урок в этот модуль",
+        text="Добавить урок в этот модуль 🎯",
         callback_data="add_lesson"
     )
 ).add(
@@ -149,7 +155,7 @@ modules_settings_mp = InlineKeyboardMarkup().add(
 
 lessons_settings_mp = InlineKeyboardMarkup().add(
     InlineKeyboardButton(
-        text="Добавить урок",
+        text="Добавить урок 🎯",
         callback_data="add_lesson"
     )
 ).add(

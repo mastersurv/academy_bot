@@ -15,6 +15,7 @@ from utils.functions.generate_lessons_settings_markup import generate_lessons_se
 from utils.functions.generate_multi_markup import generate_multi_keyboard
 from utils.functions.statistics_from_course import statistics_to_creator
 from utils.functions.statistics_to_student import statistics_to_student
+from utils.functions.statistics_to_course import statistics_to_course
 
 from utils.functions.send_lesson import send_lesson
 from config import easycourses_channel
@@ -137,8 +138,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
                 message_id=m_id,
                 reply_markup=analytics_keyboard.add(
                     InlineKeyboardButton(
-                        text="В меню",
-                        callback_data="menu"
+                        text="Назад",
+                        callback_data="edit_analytics"
                     )
                 )
             )
@@ -147,13 +148,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
     elif callback.startswith("course_analytic"):
         course_id = int(callback.split("_")[2])
-        filename = "Как стать менеджером по продажам_аналитика.xlsx"
-        with open(filename, "rb") as excel_file:
-            await bot.send_document(
-                chat_id=chat,
-                document=excel_file.read(),
-                caption='Аналитика по курсу'
-            )
+        await statistics_to_course(tg_id=tg_id, course_id=course_id)
 
     elif callback == "creation_courses":
         course_number = await db.get_number_of_created_courses(tg_id=tg_id)
@@ -171,6 +166,33 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
         except:
             pass
 
+    elif callback == "edit_analytics":
+        text = "Вы можете редактировать каждый элемент курса, также смотреть статистику и выгружать её в иксель файле"
+        try:
+            await bot.edit_message_text(
+                chat_id=chat,
+                text=text,
+                message_id=m_id,
+                reply_markup=InlineKeyboardMarkup().add(
+                    InlineKeyboardButton(
+                        text="Редактировать созданные курсы",
+                        callback_data="created_courses"
+                    )
+                ).add(
+                    InlineKeyboardButton(
+                        text="Аналитика по курсам",
+                        callback_data="courses_analytics"
+                    )
+                ).add(
+                    InlineKeyboardButton(
+                        text="Назад",
+                        callback_data="creation_courses"
+                    )
+                )
+            )
+        except:
+            pass
+
     elif callback == "created_courses":
         created_courses_keyboard = await generate_created_courses_keyboard(tg_id=tg_id)
         text = "Список созданных вами курсов"
@@ -181,8 +203,8 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
                 message_id=m_id,
                 reply_markup=created_courses_keyboard.add(
                     InlineKeyboardButton(
-                        text="К созданию курсов",
-                        callback_data="creation_courses"
+                        text="Назад",
+                        callback_data="edit_analytics"
                     )
                 )
             )
@@ -785,6 +807,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
                 status = await db.get_user_passer_status(tg_id=tg_id, course_id=course_id) # TODO добавь в запрос ci
                 if status == "interested":
                     await db.update_user_passer(tg_id=tg_id, course_id=course_id, status="passer")
+                    print(str(datetime.now)[:-7].replace("-", "_").replace(":", "_").replace(".", "_"))
                     await db.add_completion(tg_id=tg_id, course_id=course_id, start_time=str(datetime.now)[:-7].replace("-", "_").replace(":", "_").replace(".", "_"))
 
         elif callback[:17] == "check_demo_lesson":

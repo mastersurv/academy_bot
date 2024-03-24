@@ -33,6 +33,12 @@ async def files_ids(message, bot):
         if message.caption:
             text = message.html_text
 
+        # if file_path.endswith(".pdf"):
+        #     document_id = message.document.file_id
+		#
+        #     if message.caption:
+        #         text = message.html_text
+
     elif message.text:
         text = message.html_text
 

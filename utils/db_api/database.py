@@ -1144,13 +1144,13 @@ class DataBase:
 	    '''
 		await self.execute_query(query, (status, tg_id, course_id))
 
-	async def get_user_passer_status(self, tg_id):
+	async def get_user_passer_status(self, tg_id, course_id):
 		query = '''
 	        SELECT status
 	        FROM user_passing
-	        WHERE tg_id = ?
+	        WHERE tg_id = ? AND course_id = ?
 	    '''
-		result = await self.execute_query(query, (tg_id,))
+		result = await self.execute_query(query, (tg_id, course_id))
 		if result:
 			return result[0][0]
 		else:
@@ -1247,3 +1247,12 @@ class DataBase:
 
 	async def plus_negative_count(self, tg_id, course_id):
 		await self.add_negative_count(tg_id, course_id, 1)
+
+	async def get_course_users(self, course_id):
+		query = '''
+			SELECT username
+			FROM user_courses
+			WHERE course_id = ?
+		'''
+		result = await self.execute_query(query, (course_id,))
+		return [row[0] for row in result]

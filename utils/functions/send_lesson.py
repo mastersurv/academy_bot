@@ -67,8 +67,7 @@ async def send_lesson(bot: Bot, chat_id, text, audio, photo, video, video_note, 
                 chat_id=chat_id,
                 text=text,
                 parse_mode="html",
-                reply_markup=markup,
-                disable_web_page_preview=True
+                reply_markup=markup
             )
         except Exception as e:
             print(e)

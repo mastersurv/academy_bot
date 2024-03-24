@@ -3,10 +3,11 @@ from xlsxwriter import Workbook
 import os
 
 
-async def statistics_to_student(tg_id: int):
+async def statistics_to_course(tg_id: int, course_id: int):
     bot, db = get_bot_and_db()
 
     courses_ids = await db.get_courses_ids(tg_id=tg_id)
+    print(courses_ids)
     excel = Workbook("Статистика пользователя.xlsx")
     worksheet = excel.add_worksheet()
 

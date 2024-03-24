@@ -13,13 +13,11 @@ async def generate_multi_keyboard(course_id=None, module_id=None, lesson_id=None
 		else:
 			lesson_number = await db.get_lessons_numbers(course_id=course_id, module_id=module_id)
 			if lesson_id < lesson_number:
-				lesson_name = await db.get_lesson_name(course_id=course_id, module_id=module_id, lesson_id=lesson_id + 1)
-				return f"{lesson_id + 1}. {lesson_name}", f"lesson_{course_id}_{module_id}_{lesson_id + 1}"
+				return f"Следующий урок", f"lesson_{course_id}_{module_id}_{lesson_id + 1}"
 			else:
 				module_number = await db.get_modules_numbers(course_id=course_id)
 				if module_id < module_number:
-					module_name = await db.get_module_name(course_id=course_id, module_id=module_id + 1)
-					return f"{module_id + 1}. {module_name}", f"module_{course_id}_{module_id + 1}"
+					return f"Следующий модуль", f"module_{course_id}_{module_id + 1}"
 				else:
 					return "К окончанию курса", f"finish_message_{course_id}"
 
