@@ -131,11 +131,11 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
     elif callback == "courses_analytics":
         analytics_keyboard = await generate_created_courses_keyboard(tg_id=tg_id, analytics=True)
         text = "Выберите курс, аналитику по которому хотите посмотреть:"
+        await bot.delete_message(chat_id=chat, message_id=m_id)
         try:
-            await bot.edit_message_text(
+            await bot.send_message(
                 chat_id=chat,
                 text=text,
-                message_id=m_id,
                 reply_markup=analytics_keyboard.add(
                     InlineKeyboardButton(
                         text="Назад",
@@ -148,6 +148,7 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
     elif callback.startswith("course_analytic"):
         course_id = int(callback.split("_")[2])
+        await bot.delete_message(chat_id=chat, message_id=m_id)
         await statistics_to_course(tg_id=tg_id, course_id=course_id)
 
     elif callback == "creation_courses":

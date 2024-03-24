@@ -48,11 +48,11 @@ class DataBase:
 		        ''')
 
 		await self.execute_query('''
-		            CREATE TABLE IF NOT EXISTS user_courses(
-		                tg_id int,
-		                course_id INT REFERENCES courses(course_id)
-		            )
-		        ''')
+				CREATE TABLE IF NOT EXISTS user_courses(
+					tg_id int,
+					course_id INT REFERENCES courses(course_id)
+				)
+			''')
 
 		await self.execute_query('''
             CREATE TABLE IF NOT EXISTS users_posts(
@@ -1248,11 +1248,21 @@ class DataBase:
 	async def plus_negative_count(self, tg_id, course_id):
 		await self.add_negative_count(tg_id, course_id, 1)
 
-	async def get_course_users(self, course_id):
+	async def get_usernames_course_users(self, course_id):
 		query = '''
-			SELECT username
-			FROM user_courses
-			WHERE course_id = ?
-		'''
+	        SELECT u.full_name
+	        FROM users u
+	        INNER JOIN user_courses uc ON u.tg_id = uc.tg_id
+	        WHERE uc.course_id = ?
+	    '''
+		result = await self.execute_query(query, (course_id,))
+		return [row[0] for row in result]
+
+	async def get_course_users_ids(self, course_id):
+		query = '''
+	        SELECT tg_id
+	        FROM user_courses
+	        WHERE course_id = ?
+	    '''
 		result = await self.execute_query(query, (course_id,))
 		return [row[0] for row in result]

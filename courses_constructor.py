@@ -70,7 +70,7 @@ class MyBot:
 
 		if tg_id not in users:
 			# Вызов метода добавления пользователя
-			await self.db.add_user(tg_id, full_name)
+			await self.db.add_user(tg_id, username)
 			try:
 				await self.dp.bot.send_message(
 					chat_id=channel_id, text=f"Чат с пользователем @{username}",
