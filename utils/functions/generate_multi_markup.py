@@ -83,7 +83,7 @@ async def generate_multi_keyboard(course_id=None, module_id=None, lesson_id=None
 			keyboard.add(
 				InlineKeyboardButton(
 					text="К окончанию курса",
-					callback_data=f"final_message_{course_id}"
+					callback_data=f"finish_message_{course_id}"
 				)
 			)
 

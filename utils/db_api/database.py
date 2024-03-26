@@ -473,12 +473,15 @@ class DataBase:
 		return [row[0] for row in users_ids]
 
 	async def add_user(self, tg_id, full_name):
-		# Проверяем, существует ли пользователь с таким tg_id
 		existing_user = await self.get_user_by_id(tg_id)
 
-		# Если пользователь уже существует, пропускаем добавление
 		if existing_user:
-			return
+			query = '''
+		         UPDATE users
+		         SET full_name = ?
+		         WHERE tg_id = ?
+		     '''
+			await self.execute_query(query, (full_name, tg_id))
 
 		# Иначе выполняем вставку нового пользователя
 		query = '''
@@ -1181,6 +1184,7 @@ class DataBase:
 				return []
 
 	async def insert_end_time(self, tg_id, course_id, end_time):
+		print(end_time)
 		query = '''
 	        UPDATE course_completion_time
 	        SET end_time = ?
@@ -1189,9 +1193,6 @@ class DataBase:
 		await self.execute_query(query, (end_time, tg_id, course_id))
 
 	async def add_completion(self, tg_id, course_id, start_time):
-		if self.conn is None:
-			await self.connect()
-
 		query = '''
 	        INSERT INTO course_completion_time (tg_id, course_id, start_time)
 	        VALUES (?, ?, ?)

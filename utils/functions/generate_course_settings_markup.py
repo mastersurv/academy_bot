@@ -31,11 +31,6 @@ async def generate_courses_settings_keyboard(course_id: int) -> InlineKeyboardMa
         )
     ).add(
         InlineKeyboardButton(
-            text="Получить статистику по курсу",
-            callback_data=f"get_course_statistics_{course_id}"
-        )
-    ).add(
-        InlineKeyboardButton(
             text="Добавить модуль 🎯",
             callback_data=f"add_module_{course_id}"
         )
@@ -55,5 +50,11 @@ async def generate_courses_settings_keyboard(course_id: int) -> InlineKeyboardMa
             callback_data="created_courses"
         )
     )
+    # ).add(
+    #     InlineKeyboardButton(
+    #         text="Получить статистику по курсу",
+    #         callback_data=f"get_course_statistics_{course_id}"
+    #     )
+    # )
 
     return keyboard

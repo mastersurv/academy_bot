@@ -805,11 +805,12 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             lesson_id = int(callback.split("_")[3])
 
             if lesson_id == 1:
-                status = await db.get_user_passer_status(tg_id=tg_id, course_id=course_id) # TODO добавь в запрос ci
+                status = await db.get_user_passer_status(tg_id=tg_id, course_id=course_id)
+                print(tg_id, status)
                 if status == "interested":
                     await db.update_user_passer(tg_id=tg_id, course_id=course_id, status="passer")
-                    print(str(datetime.now)[:-7].replace("-", "_").replace(":", "_").replace(".", "_"))
-                    await db.add_completion(tg_id=tg_id, course_id=course_id, start_time=str(datetime.now)[:-7].replace("-", "_").replace(":", "_").replace(".", "_"))
+                    print(str(datetime.now())[:-7].replace("-", "_").replace(":", "_").replace(".", "_"))
+                    await db.add_completion(tg_id=tg_id, course_id=course_id, start_time=str(datetime.now())[:-7].replace("-", "_").replace(":", "_").replace(".", "_"))
 
         elif callback[:17] == "check_demo_lesson":
             course_id = int(callback.split("_")[3])
@@ -899,13 +900,13 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             reply_markup=keyboard
         )
 
-    elif callback.startswith("final_message_"):
+    elif callback.startswith("finish_message_"):
         course_id = int(callback.split("_")[2])
 
-        user_status = await db.get_user_passer_status(tg_id=tg_id)
+        user_status = await db.get_user_passer_status(tg_id=tg_id, course_id=course_id)
         if user_status != "passed":
             await db.update_user_passer(tg_id=tg_id, course_id=course_id, status="passed")
-            await db.insert_end_time(tg_id=tg_id, course_id=course_id, end_time=str(datetime.now)[:-7].replace("-", "_").replace(":", "_").replace(".", "_"))
+            await db.insert_end_time(tg_id=tg_id, course_id=course_id, end_time=str(datetime.now())[:-7].replace("-", "_").replace(":", "_").replace(".", "_"))
         text, voice_id, photo_id, video_id, video_note_id, document_id = await db.get_final_message(course_id=course_id)
         course_name = await db.get_course_name(course_id=course_id)
 
@@ -989,21 +990,21 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
 
                 if (len(callback_data.split("_")) == 6 and callback_data.split("_")[5] == right_answer
                         and callback_data == callback and text[0] != '✅' and text[0] != '❌'):
-                    test_positive_count = await db.get_positive_count(tg_id=tg_id, course_id=course_id) # TODO
+                    test_positive_count = await db.get_positive_count(tg_id=tg_id, course_id=course_id)
                     if test_positive_count == 0:
-                        await db.add_positive_count(tg_id=tg_id, course_id=course_id, positive_count=1) # TODO
+                        await db.add_positive_count(tg_id=tg_id, course_id=course_id, positive_count=1)
                     else:
-                        await db.plus_positive_count(tg_id=tg_id, course_id=course_id) # TODO update request
+                        await db.plus_positive_count(tg_id=tg_id, course_id=course_id)
                     text = "✅ " + text
                     is_right = True
 
                 elif callback_data == callback and text[0] != '❌' and text[0] != '✅':
                     text = "❌ " + text
-                    test_negative_count = await db.get_negative_count(tg_id=tg_id, course_id=course_id, negative_count=1)
+                    test_negative_count = await db.get_negative_count(tg_id=tg_id, course_id=course_id)
                     if test_negative_count == 0:
-                        await db.add_negative_count(tg_id=tg_id, course_id=course_id, positive_count=1)  # TODO
+                        await db.add_negative_count(tg_id=tg_id, course_id=course_id, negative_count=1)
                     else:
-                        await db.plus_negative_count(tg_id=tg_id, course_id=course_id)  # TODO update request
+                        await db.plus_negative_count(tg_id=tg_id, course_id=course_id)
 
                 l_data.append(callback_data)
                 l_text.append(text)
@@ -1037,36 +1038,6 @@ async def constructor_callback_handler(call: CallbackQuery, state: FSMContext):
             chat_id=chat,
             message_id=m_id,
             reply_markup=i_mp
-        )
-
-    elif callback.startswith("finish_message_"):
-        course_id = callback.split("_")[2]
-
-        text, voice_id, photo_id, video_id, video_note_id, document_id = await db.get_final_message(course_id=course_id)
-        await bot.delete_message(
-            chat_id=chat,
-            message_id=m_id
-        )
-        await send_lesson(
-            bot=bot,
-            chat_id=chat,
-            text=text,
-            audio=voice_id,
-            photo=photo_id,
-            video=video_id,
-            video_note=video_note_id,
-            document=document_id,
-            markup=InlineKeyboardMarkup().add(
-                InlineKeyboardButton(
-                    text="К началу курса",
-                    callback_data=f"course_{course_id}"
-                )
-            ).add(
-                InlineKeyboardButton(
-                    text="В главное меню",
-                    callback_data="menu"
-                )
-            )
         )
 
     elif callback.startswith('get_course_promo'):
